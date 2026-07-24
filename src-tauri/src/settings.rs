@@ -222,6 +222,13 @@ pub struct BoardDto {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ProjectDto {
+    pub key: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WhoAmI {
     pub name: String,
     pub display_name: String,
@@ -490,6 +497,27 @@ pub async fn settings_project_statuses(
     }
     let client = probe_client(&jira_url, auth_mode, email, token_override, cloud_id).await?;
     client.project_statuses(&key).await.map_err(|e| e.to_string())
+}
+
+/// Danh sach project cho buoc chon trong wizard — dung credential vua nhap.
+#[tauri::command]
+pub async fn settings_list_projects(
+    jira_url: String,
+    auth_mode: Option<String>,
+    email: Option<String>,
+    token_override: Option<String>,
+    cloud_id: Option<String>,
+) -> Result<Vec<ProjectDto>, String> {
+    let client = probe_client(&jira_url, auth_mode, email, token_override, cloud_id).await?;
+    let mut projects = client.list_projects().await.map_err(|e| e.to_string())?;
+    projects.sort_by(|a, b| a.key.cmp(&b.key));
+    Ok(projects
+        .into_iter()
+        .map(|p| ProjectDto {
+            key: p.key,
+            name: p.name,
+        })
+        .collect())
 }
 
 #[tauri::command]

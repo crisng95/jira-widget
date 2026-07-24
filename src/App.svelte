@@ -76,6 +76,11 @@
     }
   }
 
+  function batDauKeo(e: MouseEvent) {
+    if (e.button !== 0) return;
+    invoke("panel_start_drag").catch((err) => console.error("panel_start_drag loi", err));
+  }
+
   onMount(() => {
     invoke<PanelState>("get_state")
       .then((s) => {
@@ -116,10 +121,17 @@
 
 <div class="panel" class:moving>
   {#if moving}
-    <div class="move-banner" data-tauri-drag-region>
-      <span class="grip" data-tauri-drag-region>✥</span>
-      <span class="mt" data-tauri-drag-region>{t("moveHint")}</span>
-      <button class="done2" onclick={xongDiChuyen}>{t("done")}</button>
+    <!-- Keo bang lenh tuong minh (panel_start_drag) chu khong dua vao
+         data-tauri-drag-region — attribute path khong an tren cua so khong
+         vien o mot so may. Nut Xong chan mousedown de khoi keo nham. -->
+    <div class="move-banner" role="presentation" onmousedown={batDauKeo}>
+      <span class="grip">✥</span>
+      <span class="mt">{t("moveHint")}</span>
+      <button
+        class="done2"
+        onclick={xongDiChuyen}
+        onmousedown={(e) => e.stopPropagation()}>{t("done")}</button
+      >
     </div>
   {/if}
 

@@ -68,6 +68,10 @@
   let projectKey = $state("");
   let boards = $state<Board[]>([]);
   let boardId = $state(0);
+  // Danh sach project fetch bang credential vua nhap — chon thay vi go tay.
+  let projects = $state<{ key: string; name: string }[]>([]);
+  let projSearch = $state("");
+  let projectsFail = $state(false);
   let me = $state("");
   let mode = $state("team");
   let busy = $state("");
@@ -153,6 +157,12 @@
   async function chonSite(s: CloudSite) {
     cloudId = s.id;
     jiraUrl = s.url;
+    // site khac -> project/board khac
+    projects = [];
+    projectsFail = false;
+    projSearch = "";
+    boards = [];
+    boardId = 0;
     busy = "whoami";
     err = "";
     try {
@@ -182,10 +192,16 @@
     }
   }
 
-  // URL hay token doi la ket qua kiem tra cu het gia tri.
+  // URL hay token doi la ket qua kiem tra cu het gia tri — keo theo ca
+  // danh sach project/board da fetch bang credential cu.
   function connDirty() {
     connOk = false;
     who = null;
+    projects = [];
+    projectsFail = false;
+    projSearch = "";
+    boards = [];
+    boardId = 0;
   }
 
   async function testConn() {
@@ -233,6 +249,49 @@
     }
   }
 
+  async function fetchProjects() {
+    busy = "projects";
+    err = "";
+    projectsFail = false;
+    try {
+      projects = await invoke<{ key: string; name: string }[]>("settings_list_projects", {
+        jiraUrl: jiraUrl.trim(),
+        authMode,
+        email: email.trim() || null,
+        tokenOverride: null,
+        cloudId: cloudId || null,
+      });
+      // Chi co dung mot project thi chon luon, khoi bat bam them mot cu.
+      if (projects.length === 1) {
+        projectKey = projects[0].key;
+        void findBoards();
+      }
+    } catch (e) {
+      projects = [];
+      projectsFail = true;
+      err = t("projectsFail", { e: String(e) });
+    } finally {
+      busy = "";
+    }
+  }
+
+  function chonProject(p: { key: string; name: string }) {
+    if (projectKey === p.key) return;
+    projectKey = p.key;
+    boards = [];
+    boardId = 0;
+    void findBoards();
+  }
+
+  // Loc client-side: danh sach da fetch het mot lan, go toi dau loc toi do.
+  let projLoc = $derived.by(() => {
+    const q = projSearch.trim().toLowerCase();
+    const list = q
+      ? projects.filter((p) => `${p.key} ${p.name}`.toLowerCase().includes(q))
+      : projects;
+    return list.slice(0, 8);
+  });
+
   async function findBoards() {
     busy = "boards";
     err = "";
@@ -265,9 +324,16 @@
     if (!canNext || step >= 5) return;
     step += 1;
     err = "";
-    // Vao buoc board ma da co project key thi tim luon, khoi bat bam them.
-    if (step === 3 && projectKey.trim() && boards.length === 0) {
-      void findBoards();
+    if (step === 3) {
+      // Fetch danh sach project bang credential vua xac thuc — nguoi dung
+      // chon tu danh sach, khong phai go key tay.
+      if (projects.length === 0 && !projectsFail) {
+        void fetchProjects();
+      }
+      // Da co key tu truoc (chay lai wizard) thi tim board luon.
+      if (projectKey.trim() && boards.length === 0) {
+        void findBoards();
+      }
     }
   }
 
@@ -441,29 +507,66 @@
       <h3 class="wiz-h">{t("wizBoardH")}</h3>
       <p class="wiz-sub">{t("wizBoardSub")}</p>
 
-      <div class="field col">
-        <label for="wpk">{t("projectKey")} <span class="req">*</span></label>
-        <div class="row">
-          <input id="wpk" type="text" bind:value={projectKey} placeholder="PROJ" />
-          <button onclick={findBoards} disabled={busy !== "" || !projectKey.trim()}>
-            {busy === "boards" ? t("finding") : t("findBoards")}
-          </button>
+      {#if projects.length > 0}
+        <!-- Combobox: go de loc, bam de chon — key khong con phai nho -->
+        <div class="field col">
+          <label for="wps">{t("projectKey")} <span class="req">*</span></label>
+          <input
+            id="wps"
+            type="text"
+            bind:value={projSearch}
+            placeholder={t("searchProject")}
+            autocomplete="off"
+          />
         </div>
-      </div>
-
-      {#if boards.length === 0}
-        <p class="fh">{t("wizBoardEmpty")}</p>
-      {:else}
-        {#each boards as b (b.id)}
-          <button class="board" class:sel={boardId === b.id} onclick={() => (boardId = b.id)}>
+        {#if projLoc.length === 0}
+          <p class="fh">{t("noProjectMatch")}</p>
+        {/if}
+        {#each projLoc as p (p.key)}
+          <button class="board" class:sel={projectKey === p.key} onclick={() => chonProject(p)}>
             <span class="rd"></span>
             <span class="binfo">
-              <span class="bn">{b.name}</span>
-              <span class="bt">{b.boardType}</span>
+              <span class="bn">{p.key}</span>
+              <span class="bt">{p.name}</span>
             </span>
-            <span class="bid num">#{b.id}</span>
           </button>
         {/each}
+      {:else if busy === "projects"}
+        <p class="fh">{t("loadingProjects")}</p>
+      {:else}
+        <!-- Fallback: khong tai duoc danh sach (mang/quyen) thi van go tay duoc -->
+        <div class="field col">
+          <label for="wpk">{t("projectKey")} <span class="req">*</span></label>
+          <div class="row">
+            <input id="wpk" type="text" bind:value={projectKey} placeholder="PROJ" />
+            <button onclick={findBoards} disabled={busy !== "" || !projectKey.trim()}>
+              {busy === "boards" ? t("finding") : t("findBoards")}
+            </button>
+          </div>
+          <p class="fh">{t("projectManualHint")}</p>
+        </div>
+      {/if}
+
+      {#if projectKey.trim() && (projects.length > 0 || boards.length > 0 || busy === "boards")}
+        <div class="bsep"></div>
+        {#if busy === "boards"}
+          <p class="fh">{t("finding")}</p>
+        {:else if boards.length === 0 && projects.length > 0}
+          <p class="fh">{t("wizBoardEmpty")}</p>
+        {:else}
+          {#each boards as b (b.id)}
+            <button class="board" class:sel={boardId === b.id} onclick={() => (boardId = b.id)}>
+              <span class="rd"></span>
+              <span class="binfo">
+                <span class="bn">{b.name}</span>
+                <span class="bt">{b.boardType}</span>
+              </span>
+              <span class="bid num">#{b.id}</span>
+            </button>
+          {/each}
+        {/if}
+      {:else if projects.length === 0 && busy !== "projects" && !projectsFail}
+        <p class="fh">{t("wizBoardEmpty")}</p>
       {/if}
     {:else if step === 4}
       <h3 class="wiz-h">{t("wizViewH")}</h3>
@@ -738,6 +841,12 @@
   }
 
   /* ---- buoc 3: board ---- */
+  .bsep {
+    height: 1px;
+    background: var(--gridline);
+    margin: 14px 0;
+  }
+
   .board {
     display: grid;
     grid-template-columns: auto 1fr auto;

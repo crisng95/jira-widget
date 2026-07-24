@@ -271,6 +271,18 @@ fn hide_panel(app: tauri::AppHandle) {
     }
 }
 
+/// Keo cua so theo chuot — goi tu mousedown cua banner di chuyen. Goi lenh
+/// tuong minh thay vi `data-tauri-drag-region`: attribute path tren cua so
+/// khong vien nam o tang desktop to ra khong an tren mot so may.
+#[tauri::command]
+fn panel_start_drag(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        if let Err(e) = win.start_dragging() {
+            log::warn!("start_dragging loi: {e}");
+        }
+    }
+}
+
 /// Che do di chuyen: panel tam noi len tren de nhan chuot va keo tu do;
 /// bam "Xong" thi tra ve dung tang da cau hinh (desktop hoac floating).
 #[tauri::command]
@@ -427,7 +439,9 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let tray = TrayIconBuilder::with_id("main")
         .icon(tray_icon)
         .menu(&menu)
-        .show_menu_on_left_click(false)
+        // Chuot TRAI mo menu luon — nguoi dung bam trai theo phan xa, bat
+        // phai bam phai moi ra menu thi ai cung tuong icon hong.
+        .show_menu_on_left_click(true)
         .tooltip(&format!("Master Jira — {project}"))
         .on_menu_event(move |app, event| match event.id.as_ref() {
             "show" => toggle_window(app),
@@ -750,6 +764,7 @@ fn main() {
             settings_open,
             onboarding_open,
             hide_panel,
+            panel_start_drag,
             set_move_mode,
             get_autostart,
             set_autostart,
@@ -759,6 +774,7 @@ fn main() {
             settings::settings_clear_token,
             settings::settings_test_connection,
             settings::settings_list_boards,
+            settings::settings_list_projects,
             settings::settings_project_statuses,
             settings::settings_apply_restart,
             settings::settings_close,

@@ -151,6 +151,22 @@ pub struct BoardInfo {
     pub board_type: String,
 }
 
+/// Mot project — cho buoc chon project trong wizard (khong bat go key tay).
+#[derive(Debug, Clone, Deserialize)]
+pub struct ProjectInfo {
+    pub key: String,
+    #[serde(default)]
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ProjectPage {
+    #[serde(default)]
+    values: Vec<ProjectInfo>,
+    #[serde(rename = "isLast", default)]
+    is_last: bool,
+}
+
 #[derive(Debug, Deserialize)]
 struct IssueTypeStatuses {
     #[serde(default)]
@@ -388,6 +404,39 @@ impl JiraClient {
         out.sort();
         out.dedup();
         Ok(out)
+    }
+
+    /// Liet ke project ma tai khoan nay thay duoc — wizard cho CHON tu danh
+    /// sach that thay vi bat go key tay (go sai mot chu la 0 board, 0 ticket).
+    ///
+    /// Hai the gioi hai endpoint: DC tra het mot phat o `/project`; Cloud da
+    /// deprecate cai do, phai dung `/project/search` phan trang.
+    pub async fn list_projects(&self) -> Result<Vec<ProjectInfo>, JiraError> {
+        match &self.auth {
+            JiraAuth::Pat(_) => self.get_json::<Vec<ProjectInfo>>("/rest/api/2/project").await,
+            JiraAuth::Basic { .. } | JiraAuth::Oauth(_) => {
+                let mut out: Vec<ProjectInfo> = Vec::new();
+                let mut start_at: u32 = 0;
+                loop {
+                    let page: ProjectPage = self
+                        .get_json(&format!(
+                            "/rest/api/2/project/search?startAt={start_at}&maxResults=100"
+                        ))
+                        .await?;
+                    let got = page.values.len() as u32;
+                    out.extend(page.values);
+                    if page.is_last || got == 0 {
+                        break;
+                    }
+                    start_at += got;
+                    if start_at > 1000 {
+                        log::warn!("dung phan trang project o {start_at} — instance bat thuong lon");
+                        break;
+                    }
+                }
+                Ok(out)
+            }
+        }
     }
 
     /// Liet ke board cua mot project — de anh biet dien `board_id` nao vao config.
