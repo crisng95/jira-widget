@@ -16,7 +16,6 @@ use crate::config::{self, AuthMode, Config, DisplayMode, NotifyConfig, WindowLay
 use crate::jira::{JiraAuth, JiraClient};
 use crate::oauth;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
 

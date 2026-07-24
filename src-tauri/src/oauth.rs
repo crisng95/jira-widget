@@ -137,11 +137,6 @@ impl TokenStore {
         })
     }
 
-    /// Co refresh token de dung khong — quyet dinh "da dang nhap hay chua".
-    pub async fn is_logged_in(&self) -> bool {
-        !self.inner.lock().await.refresh_token.is_empty()
-    }
-
     /// Access token con han; het thi tu refresh. Loi tra ve chuoi de client
     /// boc thanh `JiraError::Auth`.
     pub async fn access_token(&self) -> Result<String, String> {
@@ -504,13 +499,14 @@ mod tests {
 
     #[tokio::test]
     async fn install_va_clear_doi_trang_thai_dang_nhap() {
+        // Store rong / da clear thi access_token phai Err "chua dang nhap"
+        // (khong cham mang — refresh khong duoc goi khi refresh_token rong).
         let s = TokenStore::new("https://proxy.example.invalid".into(), String::new(), 0, String::new())
             .unwrap();
-        assert!(!s.is_logged_in().await);
+        assert!(s.access_token().await.is_err());
         s.install("a".into(), 3600, "r".into()).await;
-        assert!(s.is_logged_in().await);
         assert_eq!(s.access_token().await.unwrap(), "a");
         s.clear().await;
-        assert!(!s.is_logged_in().await);
+        assert!(s.access_token().await.is_err());
     }
 }

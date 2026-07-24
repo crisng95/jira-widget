@@ -268,10 +268,9 @@ pub enum JiraAuth {
 
 pub struct JiraClient {
     http: reqwest::Client,
-    /// Base cho link mo browser (`/browse/KEY`) — luon la site URL.
-    base: String,
     /// Base cho REST API. Voi OAuth la `api.atlassian.com/ex/jira/{cloud_id}`,
-    /// hai mode con lai trung voi `base`.
+    /// hai mode con lai la chinh site URL. (Link `/browse/KEY` cho browser thi
+    /// snapshot tu dung `cfg.jira_url`, khong di qua client nay.)
     api: String,
     auth: JiraAuth,
     sprint_cache: Mutex<Option<(SprintMeta, Instant)>>,
@@ -288,10 +287,9 @@ impl JiraClient {
         let base = base_url.trim_end_matches('/').to_string();
         let api = api_base
             .map(|s| s.trim_end_matches('/').to_string())
-            .unwrap_or_else(|| base.clone());
+            .unwrap_or(base);
         Ok(Self {
             http,
-            base,
             api,
             auth,
             sprint_cache: Mutex::new(None),
