@@ -1,0 +1,249 @@
+/* Bang mau lay tu dataviz reference palette, da chay validate_palette.js:
+   - categorical 6 slot: PASS ca light lan dark (worst adjacent CVD dE 9.1 / 8.4)
+   - light mode WARN contrast o aqua/yellow/magenta -> ap dung relief rule:
+     legend cua donut luon co direct label + so luong, va danh sach member
+     dong vai tro table view. Khong bao gio doc bieu do bang mau don thuan.
+   - status color KHONG bao gio dung lam mau series, va luon di kem icon + chu.
+     Bo han slot "serious" vi no chi cach "warning" dE 13.6 — duoi san 15. */
+
+:root {
+  color-scheme: light;
+
+  --surface: rgba(252, 252, 251, 0.94);
+  --surface-solid: #fcfcfb;
+  --raised: rgba(11, 11, 11, 0.04);
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+
+  /* categorical — thu tu co dinh, khong bao gio xoay vong */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+
+  /* status — co dinh, khong theo theme */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+
+  /* ordinal ramp cho thanh tien do: ToDo -> WIP -> cho release -> xong.
+     Day la thang BAC CO THU TU nen dung 1 hue sang->toi, khong dung mau
+     categorical. Da validate --ordinal: monotone + moi buoc dL >= 0.06. */
+  --stage-todo: #86b6ef;
+  --stage-wip: #3987e5;
+  --stage-release: #256abf;
+  --stage-closed: #184f95;
+
+  --radius: 12px;
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface: rgba(26, 26, 25, 0.9);
+    --surface-solid: #1a1a19;
+    --raised: rgba(255, 255, 255, 0.06);
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    /* buoc rong hon ban light: tren nen toi cac buoc hep bi triet tieu */
+    --stage-todo: #184f95;
+    --stage-wip: #2a78d6;
+    --stage-release: #5598e7;
+    --stage-closed: #9ec5f4;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: rgba(26, 26, 25, 0.9);
+  --surface-solid: #1a1a19;
+  --raised: rgba(255, 255, 255, 0.06);
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --stage-todo: #184f95;
+  --stage-wip: #2a78d6;
+  --stage-release: #5598e7;
+  --stage-closed: #9ec5f4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100vh;
+}
+
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--baseline);
+  border-radius: 3px;
+}
+
+/* --- section --- */
+.section {
+  padding: 10px 12px;
+  border-top: 0.5px solid var(--gridline);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.count-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- text roles: chu luon deo token chu, khong bao gio deo mau series --- */
+.muted {
+  color: var(--text-muted);
+}
+.secondary {
+  color: var(--text-secondary);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 4px 0;
+}
+
+/* --- status chip: mau + ICON + CHU, khong bao gio mau don thuan --- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.dot-critical {
+  background: var(--status-critical);
+}
+.dot-warning {
+  background: var(--status-warning);
+}
+.dot-good {
+  background: var(--status-good);
+}
+.dot-neutral {
+  background: var(--baseline);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+
+.toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--raised);
+  border-radius: 6px;
+  padding: 2px;
+}
+.toggle button {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+.toggle button[aria-pressed="true"] {
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font-weight: 600;
+}

@@ -1,0 +1,48 @@
+[package]
+name = "jira-widget"
+version = "0.1.1"
+description = "Desktop panel theo doi active sprint cua board All items"
+authors = ["crisng95"]
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2.6", features = [] }
+
+[dependencies]
+# macos-private-api: bat buoc de dung transparent window + vibrancy tren macOS
+tauri = { version = "2.11", features = ["tray-icon", "macos-private-api"] }
+tauri-plugin-opener = "2.5"
+tauri-plugin-notification = "2.3"
+tauri-plugin-autostart = "2.5"
+tauri-plugin-window-state = "2.4"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# default TLS = native-tls -> dung Security.framework cua macOS,
+# khong can OpenSSL. Cert Jira la GlobalSign hop le nen GIU verification nghiem ngat.
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+
+# Tauri khong co API dat NSWindow level, ma "dan vao desktop" thi bat buoc phai
+# dat level duoi tang cua so thuong. Bam dung version Tauri dang dung (objc2
+# 0.6.4) de khong keo hai ban objc2 vao cung mot cay phu thuoc.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+
+[features]
+# duoc tauri CLI dung khi build production
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
