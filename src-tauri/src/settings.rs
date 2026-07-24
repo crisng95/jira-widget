@@ -18,6 +18,7 @@ use crate::oauth;
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
+use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 pub const SETTINGS_WINDOW: &str = "settings";
 pub const ONBOARDING_WINDOW: &str = "onboarding";
@@ -559,6 +560,12 @@ pub fn settings_apply_restart(app: tauri::AppHandle) {
     // dac biet la sau wizard onboarding (luc do panel dang bi dau di).
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
+    }
+    // `app.restart()` thoat KHONG qua event loop nen plugin window-state khong
+    // kip ghi (RunEvent::Exit khong toi noi) — vi tri panel vua keo se mat va
+    // lan mo sau bi nem ve goc mac dinh. Ghi tay truoc khi restart.
+    if let Err(e) = app.save_window_state(StateFlags::all()) {
+        log::warn!("khong luu duoc window state truoc khi restart: {e}");
     }
     log::info!("khoi dong lai de ap dung cai dat");
     app.restart();

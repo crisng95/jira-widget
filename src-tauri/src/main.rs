@@ -318,6 +318,14 @@ fn set_move_mode(
             let _ = win.set_always_on_top(true);
         }
     }
+    // Chot vi tri vua keo xuong dia NGAY: plugin chi tu luu khi thoat sach
+    // qua event loop — app bi kill hay restart tat thi vi tri moi mat trang.
+    {
+        use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+        if let Err(e) = app.save_window_state(StateFlags::all()) {
+            log::warn!("khong luu duoc window state sau khi di chuyen: {e}");
+        }
+    }
     log::info!("tat che do di chuyen — panel ve tang {:?}", state.cfg.window_layer);
     Ok(())
 }
