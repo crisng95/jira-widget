@@ -1,6 +1,6 @@
 Sprint đang chạy, lúc nào cũng trong tầm mắt.
 
-Master Jira ghim một panel gọn lên desktop, hiển thị trạng thái trực tiếp của active sprint — không cần mở tab trình duyệt, không phải đổi ngữ cảnh. Panel tự làm mới mỗi 60 giây và chỉ báo khi có thứ thực sự thay đổi.
+Widget for Jira ghim một panel gọn lên desktop, hiển thị trạng thái trực tiếp của active sprint — không cần mở tab trình duyệt, không phải đổi ngữ cảnh. Panel tự làm mới mỗi 60 giây và chỉ báo khi có thứ thực sự thay đổi.
 
 SINH RA CHO TEAM LEAD
 • Tiến độ sprint trong một cái liếc — done/tổng, story point luôn kèm mẫu số, và "chờ release" tách riêng khỏi done thật

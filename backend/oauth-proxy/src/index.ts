@@ -1,5 +1,5 @@
 /**
- * Master Jira — Atlassian OAuth 2.0 (3LO) token-exchange proxy.
+ * Widget for Jira — Atlassian OAuth 2.0 (3LO) token-exchange proxy.
  *
  * Stateless Cloudflare Worker. Atlassian's 3LO flow requires a
  * client_secret and does not support PKCE, so this worker holds the
@@ -241,9 +241,9 @@ ${inner}
 
 function infoPage(): string {
   return page(
-    "Master Jira OAuth proxy",
-    `<h1>Master Jira OAuth proxy</h1>
-<p>Dịch vụ trung gian đổi mã OAuth cho app Master Jira.</p>
+    "Widget for Jira OAuth proxy",
+    `<h1>Widget for Jira OAuth proxy</h1>
+<p>Dịch vụ trung gian đổi mã OAuth cho app Widget for Jira.</p>
 <p class="muted">No data stored — không lưu token, không lưu mã, không CORS.</p>`,
   );
 }
@@ -255,7 +255,7 @@ function errorPage(errorCode: string | null): string {
   return page(
     "Đăng nhập không thành công",
     `<h1>Đăng nhập không thành công</h1>
-<p>Quay lại app Master Jira và thử lại.</p>
+<p>Quay lại app Widget for Jira và thử lại.</p>
 ${detail}`,
   );
 }

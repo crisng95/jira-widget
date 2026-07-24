@@ -44,7 +44,7 @@ const vi: Record<string, string> = {
   overdue: "quá {t}",
 
   // --- notice / trang thai rong ---
-  welcomeTitle: "Chào mừng đến Master Jira 👋",
+  welcomeTitle: "Chào mừng đến Widget for Jira 👋",
   welcomeBody: "Kết nối Jira của bạn để panel bắt đầu chạy — chỉ mất một phút.",
   welcomeShort: "chưa cài đặt xong",
   openGuide: "Mở hướng dẫn cài đặt",
@@ -228,7 +228,7 @@ const vi: Record<string, string> = {
   authHintCloudBasic: "Jira Cloud dùng API token + email (Basic) — không phải PAT.",
 
   // --- wizard ---
-  wizTitle: "Chào mừng · Master Jira",
+  wizTitle: "Chào mừng · Widget for Jira",
   wizStepLang: "Ngôn ngữ",
   wizStepConn: "Kết nối",
   wizStepBoard: "Board",
@@ -294,7 +294,7 @@ const en: Record<string, string> = {
   hideTitle: "Hide to menu bar",
   overdue: "{t} over",
 
-  welcomeTitle: "Welcome to Master Jira 👋",
+  welcomeTitle: "Welcome to Widget for Jira 👋",
   welcomeBody: "Connect your Jira and the panel comes alive — takes about a minute.",
   welcomeShort: "setup incomplete",
   openGuide: "Open setup guide",
@@ -468,7 +468,7 @@ const en: Record<string, string> = {
   cloudTokenHowTo: "id.atlassian.com → Security → Create and manage API tokens.",
   authHintCloudBasic: "Jira Cloud uses API token + email (Basic) — not a PAT.",
 
-  wizTitle: "Welcome · Master Jira",
+  wizTitle: "Welcome · Widget for Jira",
   wizStepLang: "Language",
   wizStepConn: "Connect",
   wizStepBoard: "Board",

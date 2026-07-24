@@ -1,1 +1,1 @@
-scrum,agile,standup,kanban,board,team,dashboard,tracker,widget,menubar,backlog,issue
+scrum,agile,standup,kanban,board,team,dashboard,tracker,burndown,menubar,backlog,issue

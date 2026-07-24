@@ -70,22 +70,27 @@
   --r-xl: 12px;
   --r-full: 999px;
 
-  --radius: var(--r-xl);
+  /* Bo goc panel = 16 nhu widget desktop cua macOS (12 cua thang bo goc nhin
+     vuong hon hang xom ro ret khi dat canh nhau). */
+  --radius: 16px;
   --font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --surface: rgba(26, 26, 25, 0.86);
-    --surface-solid: #1c1c1b;
+    /* Chat lieu bam theo widget desktop cua macOS: xam TRUNG TINH gan dac,
+       khong am, it hut mau wallpaper — panel dung canh widget he thong phai
+       nhin nhu cung mot ho. */
+    --surface: rgba(43, 43, 46, 0.9);
+    --surface-solid: #28282a;
     --raised: rgba(255, 255, 255, 0.06);
     --text-primary: #ffffff;
-    --text-secondary: #c7c6bd;
-    --text-muted: #93918b;
-    --gridline: #2c2c2a;
-    --baseline: #3a3a37;
-    --border: rgba(255, 255, 255, 0.1);
+    --text-secondary: #c8c9ce;
+    --text-muted: #95969d;
+    --gridline: #3a3a3d;
+    --baseline: #4a4a4e;
+    --border: rgba(255, 255, 255, 0.07);
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
@@ -109,15 +114,15 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface: rgba(26, 26, 25, 0.86);
-  --surface-solid: #1c1c1b;
+  --surface: rgba(43, 43, 46, 0.9);
+  --surface-solid: #28282a;
   --raised: rgba(255, 255, 255, 0.06);
   --text-primary: #ffffff;
-  --text-secondary: #c7c6bd;
-  --text-muted: #93918b;
-  --gridline: #2c2c2a;
-  --baseline: #3a3a37;
-  --border: rgba(255, 255, 255, 0.1);
+  --text-secondary: #c8c9ce;
+  --text-muted: #95969d;
+  --gridline: #3a3a3d;
+  --baseline: #4a4a4e;
+  --border: rgba(255, 255, 255, 0.07);
   --series-1: #3987e5;
   --series-2: #d95926;
   --series-3: #199e70;
@@ -169,8 +174,10 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  backdrop-filter: blur(26px) saturate(180%);
-  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  /* saturate thap: material cua widget macOS khu mau wallpaper rat manh,
+     de saturate cao thi panel nga xanh theo hinh nen va lech ca ho. */
+  backdrop-filter: blur(24px) saturate(110%);
+  -webkit-backdrop-filter: blur(24px) saturate(110%);
   border: 0.5px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;

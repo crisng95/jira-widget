@@ -404,12 +404,12 @@ async fn wait_for_code(listener: TcpListener, expected_state: &str) -> Result<St
             if !c.is_empty() && s == expected_state);
 
         let body = if hop_le {
-            "<h2>Đăng nhập thành công ✓</h2><p>Quay lại app Master Jira để tiếp tục.</p>"
+            "<h2>Đăng nhập thành công ✓</h2><p>Quay lại app Widget for Jira để tiếp tục.</p>"
         } else {
-            "<h2>Đăng nhập không thành công</h2><p>Quay lại app Master Jira và thử lại.</p>"
+            "<h2>Đăng nhập không thành công</h2><p>Quay lại app Widget for Jira và thử lại.</p>"
         };
         let page = format!(
-            "<!doctype html><meta charset=\"utf-8\"><title>Master Jira</title>\
+            "<!doctype html><meta charset=\"utf-8\"><title>Widget for Jira</title>\
              <body style=\"font-family:system-ui;display:grid;place-items:center;height:90vh;text-align:center\">\
              <div>{body}</div></body>"
         );

@@ -246,7 +246,7 @@ pub fn open_window(app: &tauri::AppHandle) {
         SETTINGS_WINDOW,
         WebviewUrl::App("settings.html".into()),
     )
-    .title("Master Jira — Cai dat")
+    .title("Widget for Jira — Cai dat")
     .inner_size(560.0, 600.0)
     .min_inner_size(500.0, 440.0)
     .resizable(true)
@@ -276,7 +276,7 @@ pub fn open_onboarding(app: &tauri::AppHandle) {
         ONBOARDING_WINDOW,
         WebviewUrl::App("onboarding.html".into()),
     )
-    .title("Master Jira")
+    .title("Widget for Jira")
     .inner_size(560.0, 640.0)
     .min_inner_size(520.0, 560.0)
     .resizable(true)

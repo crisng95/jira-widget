@@ -442,7 +442,7 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         // Chuot TRAI mo menu luon — nguoi dung bam trai theo phan xa, bat
         // phai bam phai moi ra menu thi ai cung tuong icon hong.
         .show_menu_on_left_click(true)
-        .tooltip(&format!("Master Jira — {project}"))
+        .tooltip(&format!("Widget for Jira — {project}"))
         .on_menu_event(move |app, event| match event.id.as_ref() {
             "show" => toggle_window(app),
             "settings" => settings::open_window(app),
@@ -544,7 +544,7 @@ fn init_logging() {
 
 fn print_help() {
     println!(
-        "Master Jira\n\n\
+        "Widget for Jira\n\n\
          jira-widget                 chay panel\n\
          jira-widget --set-token     nap Jira PAT cua ban vao Keychain (doc tu stdin)\n\
          jira-widget --clear-token   xoa token khoi Keychain\n\

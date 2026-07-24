@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Master Jira",
+  "productName": "Widget for Jira",
   "version": "0.1.1",
   "identifier": "com.isemi.jiraw",
   "build": {
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Master Jira",
+        "title": "Widget for Jira",
         "width": 360,
         "height": 620,
         "minWidth": 320,

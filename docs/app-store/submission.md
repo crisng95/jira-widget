@@ -13,7 +13,7 @@ Toàn bộ metadata đã đóng gói máy-đọc-được ở **`fastlane/metada
 ASC_ISSUER_ID=<issuer-uuid> fastlane mac push_metadata
 ```
 
-Tên app đã chốt: **Master Jira** (đã áp dụng toàn repo + metadata).
+Tên app đã chốt: **Widget for Jira** (đã áp dụng toàn repo + metadata).
 
 ---
 
@@ -21,7 +21,7 @@ Tên app đã chốt: **Master Jira** (đã áp dụng toàn repo + metadata).
 
 | Field | Giá trị đề xuất |
 |---|---|
-| Name (≤30 ký tự) | **`Master Jira`** (11) — đã chốt; xem ghi chú trademark bên dưới |
+| Name (≤30 ký tự) | **`Widget for Jira`** (15) — đã chốt; xem ghi chú trademark bên dưới |
 | Subtitle (≤30) | EN: `Active sprint on your desktop` (29) |
 | Bundle ID | `com.isemi.jiraw` |
 | SKU | `jiraw-001` (nội bộ, không public, không đổi được sau này) |
@@ -34,13 +34,13 @@ Tên app đã chốt: **Master Jira** (đã áp dụng toàn repo + metadata).
 
 ### ⚠️ Ghi chú tên app (trademark — Guideline 5.2.1)
 
-Đã chốt **Master Jira** và áp dụng toàn repo (productName, title các cửa sổ, README,
-fastlane metadata). Mức rủi ro, nói thẳng: tên không *bắt đầu* bằng "Jira" (tránh được
-lỗi nặng nhất), nhưng cũng không theo mẫu *"Tên riêng for Jira"* mà guideline thương hiệu
-bên-thứ-ba của Atlassian khuyến nghị. Nếu App Review vướng 5.2.1 hoặc Atlassian khiếu nại,
-phương án lùi là **`Master for Jira`** (15 ký tự) — chỉ sửa metadata, không cần build lại
-binary. Description hai ngôn ngữ đã kèm dòng disclaimer "không liên kết với Atlassian"
-để giảm rủi ro này.
+Đã chốt **Widget for Jira** và áp dụng toàn repo (productName, title các cửa sổ, README,
+fastlane metadata). Tên theo đúng mẫu nominative *"Tên riêng for Jira"* mà guideline
+thương hiệu bên-thứ-ba của Atlassian yêu cầu (họ nêu ví dụ: "App X for Jira" được duyệt,
+"Jira App X" bị từ chối) → rủi ro 5.2.1 với tên về gần zero. Hai điều phải giữ về sau:
+chữ "Jira" không được trình bày nổi bật hơn phần còn lại của tên (cùng cỡ chữ là đạt),
+và không đăng ký trademark cho cụm "Widget for Jira". Description hai ngôn ngữ vẫn kèm
+dòng disclaimer "không liên kết với Atlassian".
 
 Bundle id `com.isemi.jiraw` không sao — bundle id không hiển thị và không dính trademark.
 
@@ -90,7 +90,7 @@ See your active sprint at a glance — progress, risks, handover queues and team
 ```
 Your active sprint, always in sight.
 
-Master Jira pins a compact, glanceable panel to your desktop showing the live state of your team's active sprint — no browser tab, no context switching. It refreshes every 60 seconds and taps you on the shoulder only when something actually changes.
+Widget for Jira pins a compact, glanceable panel to your desktop showing the live state of your team's active sprint — no browser tab, no context switching. It refreshes every 60 seconds and taps you on the shoulder only when something actually changes.
 
 BUILT FOR TEAM LEADS
 • Sprint progress at a glance — done vs. total, story points with explicit denominators, and "pending release" split out from truly done
@@ -124,9 +124,10 @@ Jira is a registered trademark of Atlassian Pty Ltd. This app is an independent 
 ### Keywords (≤100, phân cách bằng dấu phẩy, không space sau phẩy)
 
 ```
-scrum,agile,standup,kanban,board,team,dashboard,tracker,widget,menubar,backlog,issue
+scrum,agile,standup,kanban,board,team,dashboard,tracker,burndown,menubar,backlog,issue
 ```
-(84 ký tự — không lặp "jira"/"sprint" vì name "Master Jira" + subtitle đã được index sẵn)
+(86 ký tự — không lặp "jira"/"widget"/"sprint" vì name "Widget for Jira" + subtitle đã
+được index sẵn; slot "widget" cũ thay bằng "burndown")
 
 ### URLs + Copyright
 
@@ -166,7 +167,7 @@ Sprint đang chạy hiện ngay trên desktop: tiến độ, cảnh báo rủi r
 ```
 Sprint đang chạy, lúc nào cũng trong tầm mắt.
 
-Master Jira ghim một panel gọn lên desktop, hiển thị trạng thái trực tiếp của active sprint — không cần mở tab trình duyệt, không phải đổi ngữ cảnh. Panel tự làm mới mỗi 60 giây và chỉ báo khi có thứ thực sự thay đổi.
+Widget for Jira ghim một panel gọn lên desktop, hiển thị trạng thái trực tiếp của active sprint — không cần mở tab trình duyệt, không phải đổi ngữ cảnh. Panel tự làm mới mỗi 60 giây và chỉ báo khi có thứ thực sự thay đổi.
 
 SINH RA CHO TEAM LEAD
 • Tiến độ sprint trong một cái liếc — done/tổng, story point luôn kèm mẫu số, và "chờ release" tách riêng khỏi done thật
@@ -301,7 +302,7 @@ sau.
 
 ## 9. Thứ tự thao tác đề xuất
 
-1. ~~Chốt tên app~~ → đã chốt **Master Jira**, repo + metadata đổi xong.
+1. ~~Chốt tên app~~ → đã chốt **Widget for Jira**, repo + metadata đổi xong.
 2. Push repo lên GitHub để **privacy policy URL sống**.
 3. Đẩy metadata lên ASC (điền mục 1, 4, 5, privacy URL + review notes tự động):
 

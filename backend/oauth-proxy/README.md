@@ -1,6 +1,6 @@
-# Master Jira — OAuth Proxy (Cloudflare Worker)
+# Widget for Jira — OAuth Proxy (Cloudflare Worker)
 
-Proxy đổi token Atlassian OAuth 2.0 (3LO) cho app desktop **Master Jira** (Tauri).
+Proxy đổi token Atlassian OAuth 2.0 (3LO) cho app desktop **Widget for Jira** (Tauri).
 Worker **stateless**, viết bằng TypeScript, **không có runtime dependency**.
 
 ---
@@ -92,7 +92,7 @@ Kiểm tra type trước khi deploy: `npm run check` (chạy `tsc --noEmit`).
 
 ---
 
-## (d) Nối vào app Master Jira
+## (d) Nối vào app Widget for Jira
 
 Điền cấu hình vào file config của app:
 

@@ -1,4 +1,4 @@
-# Privacy Policy — Master Jira
+# Privacy Policy — Widget for Jira
 
 **Effective date:** 24 July 2026
 **Developer:** ISEMI COMPANY LIMITED — contact: aabooksapp@gmail.com

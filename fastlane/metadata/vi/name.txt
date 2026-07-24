@@ -1,1 +1,1 @@
-Master Jira
+Widget for Jira

@@ -1,4 +1,4 @@
-# Master Jira
+# Widget for Jira
 
 Panel desktop nổi trên macOS, poll Jira mỗi 60 giây, hiển thị tình hình active sprint
 của board bạn chỉ định trong cấu hình, cho vai trò leader.
@@ -6,7 +6,7 @@ của board bạn chỉ định trong cấu hình, cho vai trò leader.
 Panel không ghi gì lên Jira — chỉ đọc.
 
 <p align="center">
-  <img src="docs/panel.png" alt="Master Jira — panel hiển thị active sprint trên desktop macOS" width="360">
+  <img src="docs/panel.png" alt="Widget for Jira — panel hiển thị active sprint trên desktop macOS" width="360">
 </p>
 
 ---
@@ -15,15 +15,15 @@ Panel không ghi gì lên Jira — chỉ đọc.
 
 Cách nhanh nhất — không cần cài Rust hay Node:
 
-1. Tải `Master-Jira_x.y.z_aarch64.dmg` ở trang
+1. Tải `Widget-for-Jira_x.y.z_aarch64.dmg` ở trang
    **[Releases](https://github.com/crisng95/jira-widget/releases)**.
-2. Mở file `.dmg`, kéo **Master Jira** vào thư mục **Applications**.
+2. Mở file `.dmg`, kéo **Widget for Jira** vào thư mục **Applications**.
 3. App **chưa notarize** (không có tài khoản Apple Developer) nên macOS chặn ở lần
-   mở đầu — trên macOS mới báo **"Master Jira is damaged and can't be opened"**.
+   mở đầu — trên macOS mới báo **"Widget for Jira is damaged and can't be opened"**.
    Đây **không** phải file hỏng. Sau khi kéo vào Applications, chạy một lần:
 
    ```bash
-   xattr -dr com.apple.quarantine "/Applications/Master Jira.app"
+   xattr -dr com.apple.quarantine "/Applications/Widget for Jira.app"
    ```
 
    Lệnh này gỡ cờ "tải từ internet" để macOS thôi chặn; xong mở app bình thường.
@@ -48,7 +48,7 @@ hai đều **không** phải file hỏng. Hai cách qua:
 - **Cách 1 — gỡ cờ quarantine (khuyên dùng, luôn được):**
 
   ```bash
-  xattr -dr com.apple.quarantine "/Applications/Master Jira.app"
+  xattr -dr com.apple.quarantine "/Applications/Widget for Jira.app"
   ```
 
   Cờ quarantine là dấu "tải từ internet" macOS gắn vào; gỡ đi thì Gatekeeper thôi

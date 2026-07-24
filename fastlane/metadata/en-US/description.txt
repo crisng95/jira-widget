@@ -1,6 +1,6 @@
 Your active sprint, always in sight.
 
-Master Jira pins a compact, glanceable panel to your desktop showing the live state of your team's active sprint — no browser tab, no context switching. It refreshes every 60 seconds and taps you on the shoulder only when something actually changes.
+Widget for Jira pins a compact, glanceable panel to your desktop showing the live state of your team's active sprint — no browser tab, no context switching. It refreshes every 60 seconds and taps you on the shoulder only when something actually changes.
 
 BUILT FOR TEAM LEADS
 • Sprint progress at a glance — done vs. total, story points with explicit denominators, and "pending release" split out from truly done
