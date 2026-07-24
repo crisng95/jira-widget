@@ -1,0 +1,343 @@
+/* Cua so cai dat — cua so BINH THUONG: nen dac, co vien he thong.
+   Nguoc han voi panel (trong suot, khong vien, o tang desktop).
+
+   Ban truoc bi che la roi. Nguyen nhan va cach chua:
+   - moi truong deu co mot doan giai thich dai  -> chi giu gioi han 1 dong, va
+     chi o cho that su khong doan duoc
+   - o nhap so keo dai het chieu ngang           -> o so rong co dinh + don vi
+   - nut phu nhet giua doan van                  -> nut ve dung hang cua no
+   - tat ca do vao mot trang cuon dai            -> chia 4 tab */
+
+.settings-body {
+  background: var(--surface-solid);
+  overflow: hidden;
+}
+
+.sw {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-size: 12.5px;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.sw-head {
+  flex: none;
+  padding: 14px 20px 0;
+}
+
+.sw-head h1 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--raised);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.tabs button {
+  flex: 1;
+  font: inherit;
+  font-size: 11.5px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  border-radius: 5px;
+  padding: 5px 8px;
+}
+
+.tabs button[aria-selected="true"] {
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 0 0 0.5px var(--border);
+}
+
+/* ----------------------------------------------------------------- body */
+
+.sw-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+}
+
+.sw-body::-webkit-scrollbar {
+  width: 7px;
+}
+.sw-body::-webkit-scrollbar-thumb {
+  background: var(--baseline);
+  border-radius: 4px;
+}
+
+/* Mot dong = nhan trai + dieu khien phai. Can giua theo chieu doc de khong
+   bi lech khi dieu khien cao thap khac nhau. */
+.field {
+  display: grid;
+  grid-template-columns: 122px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.field > label,
+.field > .lbl {
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.field.top {
+  align-items: start;
+}
+.field.top > label {
+  padding-top: 6px;
+}
+
+/* Gioi han 1 dong, nam ngay duoi dieu khien, khong dai dong */
+.hint {
+  grid-column: 2;
+  margin: -8px 0 0;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.sep {
+  height: 1px;
+  background: var(--gridline);
+  margin: 18px 0;
+}
+
+.group-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+/* -------------------------------------------------------------- controls */
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--raised);
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  width: 100%;
+}
+
+textarea {
+  min-height: 56px;
+  resize: vertical;
+  line-height: 1.5;
+  font-size: 12px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--series-1);
+  outline-offset: -1px;
+}
+
+/* O so khong bao gio keo het chieu ngang — 3 chu so thi rong 3 chu so. */
+.num {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.num input {
+  width: 78px;
+  flex: none;
+}
+.num .unit {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+.row {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Lua chon bi khoa: mo di nhung VAN doc duoc, kem mot dong hint noi ro thieu gi.
+   An han di thi nguoi dung khong biet la co lua chon do. */
+.row span.disabled {
+  color: var(--text-muted);
+}
+
+.tokline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.tokline .ok {
+  color: var(--status-good);
+}
+
+.checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 14px;
+}
+/* Danh sach status co the dai -> cuon trong khung, khong keo dai ca trang */
+.checks.stat {
+  grid-template-columns: 1fr 1fr;
+  max-height: 148px;
+  overflow-y: auto;
+  padding: 7px 8px;
+  background: var(--raised);
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+}
+
+.checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------- buttons */
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 5px 11px;
+  border: 0.5px solid var(--border);
+  background: var(--raised);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--text-muted);
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button.primary {
+  background: var(--series-1);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Nut phu dang chu — dung cho hanh dong it dung nhu Xoa token */
+button.link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+button.link:hover:not(:disabled) {
+  color: var(--status-critical);
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.sw-foot {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 11px 20px;
+  border-top: 0.5px solid var(--gridline);
+  background: var(--surface-solid);
+}
+.sw-foot .spacer {
+  flex: 1;
+}
+.sw-foot .path {
+  font-size: 9.5px;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------- messages */
+
+.msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 11px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--raised);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.msg .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+  margin-top: 4px;
+}
+.msg.ok .dot {
+  background: var(--status-good);
+}
+.msg.err .dot {
+  background: var(--status-critical);
+}
+.msg.warn .dot {
+  background: var(--status-warning);
+}
+
+/* --- Hop cau hinh mot hang doi --- */
+.qbox {
+  border: 0.5px solid var(--border);
+  border-radius: 7px;
+  padding: 9px 10px;
+  margin-bottom: 9px;
+}
+.qhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.qname {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.qcount {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.qbox .checks.stat {
+  margin-top: 9px;
+}
+.qhint {
+  grid-column: auto;
+  margin: 6px 0 12px;
+}

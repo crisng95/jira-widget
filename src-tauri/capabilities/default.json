@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Quyen toi thieu: webview chi duoc nghe event va invoke command cua app. Moi thao tac mang/token deu nam o Rust nen webview khong can quyen network.",
+  "windows": ["main", "settings"],
+  "permissions": ["core:default"]
+}
