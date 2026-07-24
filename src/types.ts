@@ -160,6 +160,8 @@ export interface PanelState {
   staleDays: number;
   /** "vi" | "en" — de panel chon dung bo chuoi ngay tu lan render dau */
   language: string;
+  /** Chua cai dat xong — panel hien man chao mung thay vi loi ket noi */
+  onboarding: boolean;
 }
 
 /** Thu tu co dinh — mau bam theo NGUOI, khong bam theo thu hang.

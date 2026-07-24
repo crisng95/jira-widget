@@ -130,7 +130,19 @@
 
     {#if !compact}
       <div class="scroll">
-        {#if panel.errorKind === "auth"}
+        {#if panel.onboarding && !snap}
+          <!-- Chua cai dat xong: chao mung + loi ra, KHONG doa nguoi dung bang
+               loi ket noi do choi — ho con chua nhap gi ca. -->
+          <div class="section notice">
+            <p class="ntitle">
+              <span class="dot dot-mine"></span> {t("welcomeTitle")}
+            </p>
+            <p class="nbody muted">{t("welcomeBody")}</p>
+            <button class="back" onclick={() => invoke("onboarding_open")}>
+              {t("openGuide")}
+            </button>
+          </div>
+        {:else if panel.errorKind === "auth"}
           <!-- Loi auth khong duoc im lang: panel trang thi anh tuong sprint rong.
                "Token het han" phai co loi ra ngay tai cho: nut mo Cai dat. -->
           <div class="section notice">
@@ -315,6 +327,10 @@
   }
   .back:hover {
     background: var(--border);
+  }
+
+  .dot-mine {
+    background: var(--series-1);
   }
 
   .stalebar {

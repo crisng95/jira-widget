@@ -35,6 +35,9 @@ pub struct PanelState {
     pub stale_days: i64,
     /// "vi" | "en" — de panel chon dung bo chuoi ngay tu lan render dau
     pub language: String,
+    /// Chua cai dat xong (thieu credential luc khoi dong) — panel hien man
+    /// chao mung + nut mo wizard thay vi loi ket noi do choi.
+    pub onboarding: bool,
 }
 
 pub struct AppState {
@@ -42,6 +45,9 @@ pub struct AppState {
     pub client: Arc<JiraClient>,
     pub inner: Mutex<Inner>,
     pub refresh_tx: mpsc::Sender<()>,
+    /// Thieu credential luc khoi dong. Tinh MOT lan: wizard xong la restart
+    /// nen khong can doi nong.
+    pub onboarding: bool,
 }
 
 #[derive(Default)]
@@ -90,6 +96,7 @@ impl AppState {
             poll_interval_secs: self.cfg.poll_interval_secs,
             stale_days: self.cfg.stale_days,
             language: g.language.clone(),
+            onboarding: self.onboarding,
         }
     }
 }

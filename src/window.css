@@ -206,6 +206,22 @@ button.ghost:hover:not(:disabled) {
   border-color: transparent;
 }
 
+/* Nut dang CARD (chon ngon ngu / board / che do / site) chua ca doan mo ta —
+   phai xuong dong duoc. Khong co override nay thi `white-space: nowrap` cua
+   nut thuong lam card phinh ngang va keo ca body tran khoi cua so. */
+button.lang,
+button.board,
+.choice button.opt,
+button.siterow {
+  white-space: normal;
+}
+
+/* Khong bao gio cho noi dung day cua so cuon ngang — thua thi cat. */
+.wiz-body,
+.sw-body {
+  overflow-x: hidden;
+}
+
 /* Nut phu dang chu — cho hanh dong it dung nhu Xoa token */
 button.link {
   border: none;

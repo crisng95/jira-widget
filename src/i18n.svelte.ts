@@ -44,6 +44,10 @@ const vi: Record<string, string> = {
   overdue: "quá {t}",
 
   // --- notice / trang thai rong ---
+  welcomeTitle: "Chào mừng đến Master Jira 👋",
+  welcomeBody: "Kết nối Jira của bạn để panel bắt đầu chạy — chỉ mất một phút.",
+  welcomeShort: "chưa cài đặt xong",
+  openGuide: "Mở hướng dẫn cài đặt",
   tokenExpiredHint: "Cấp lại Personal Access Token trong Jira rồi cập nhật ở Cài đặt.",
   openSettings: "Mở Cài đặt",
   cantReachJira: "Không kết nối được Jira",
@@ -285,6 +289,10 @@ const en: Record<string, string> = {
   hideTitle: "Hide to menu bar",
   overdue: "{t} over",
 
+  welcomeTitle: "Welcome to Master Jira 👋",
+  welcomeBody: "Connect your Jira and the panel comes alive — takes about a minute.",
+  welcomeShort: "setup incomplete",
+  openGuide: "Open setup guide",
   tokenExpiredHint: "Create a new Personal Access Token in Jira, then update it in Settings.",
   openSettings: "Open Settings",
   cantReachJira: "Can't reach Jira",

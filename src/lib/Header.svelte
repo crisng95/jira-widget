@@ -92,7 +92,11 @@
   {#if !compact}
     <div class="line2" data-tauri-drag-region>
       <span class="stamp">
-        {#if !panel.ok}
+        {#if panel.onboarding && !panel.ok}
+          <!-- Chua cai dat xong thi loi ket noi la dieu hien nhien — stamp
+               trung tinh, khong nhay dot do -->
+          <span class="dot dot-neutral"></span> {t("welcomeShort")}
+        {:else if !panel.ok}
           <span class="dot dot-critical"></span>
           <span class="crit-text">
             {panel.errorKind === "auth"

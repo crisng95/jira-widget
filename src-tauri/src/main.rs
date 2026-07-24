@@ -257,6 +257,12 @@ fn settings_open(app: tauri::AppHandle) {
     settings::open_window(&app);
 }
 
+/// Mo lai wizard tu man chao mung tren panel (nguoi dung lo dong wizard).
+#[tauri::command]
+fn onboarding_open(app: tauri::AppHandle) {
+    settings::open_onboarding(&app);
+}
+
 /// An panel xuong menu bar — nut ⤓ tren header. Hien lai bang icon tray.
 #[tauri::command]
 fn hide_panel(app: tauri::AppHandle) {
@@ -415,8 +421,11 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Giu tham chieu de tich lai o dung trang thai that sau khi bat/tat
     let autostart_item = autostart.clone();
 
+    // Icon TEMPLATE rieng cho tray (den + alpha, macOS tu doi mau theo menu
+    // bar). Dung icon app mau voi set_icon_as_template la ra mot o trang.
+    let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?;
     let tray = TrayIconBuilder::with_id("main")
-        .icon(app.default_window_icon().expect("co icon mac dinh").clone())
+        .icon(tray_icon)
         .menu(&menu)
         .show_menu_on_left_click(false)
         .tooltip(&format!("Master Jira — {project}"))
@@ -669,6 +678,7 @@ fn main() {
         client,
         inner: Mutex::new(Inner::new(mode, lang)),
         refresh_tx,
+        onboarding: thieu_token,
     });
 
     tauri::Builder::default()
@@ -738,6 +748,7 @@ fn main() {
             set_display_mode,
             set_language,
             settings_open,
+            onboarding_open,
             hide_panel,
             set_move_mode,
             get_autostart,
