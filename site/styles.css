@@ -2,9 +2,10 @@
    Nhận diện: system display 800 + ui-monospace làm sợi chỉ xuyên suốt.
    Trang tự chứa 100% — không webfont, không CDN, không tracker.
 
-   Scene hero: demo choreography 24s, MỌI element animate cùng duration 24s
-   không delay → đồng pha, seam về pose 0% ở 100%. Data trong scene là hư cấu
-   (project NOVA, alex.kim/jordan.lee/...) — không dùng tên người thật. */
+   Scene hero: demo choreography 40s (Act 1 = 0–60%: click ticket → approve;
+   Act 2 = 60–100%: browser đóng, widget Apple hiện, kéo panel xếp cạnh, mở
+   Claude Code). MỌI element animate cùng duration 40s không delay → đồng pha,
+   seam về pose 0% ở 100%. Data hư cấu (NOVA, alex.kim/...) — không tên thật. */
 
 :root {
   --paper: #f4f3f0;
@@ -158,12 +159,22 @@ header.site {
   line-height: 1.35;
   border-radius: 1.1em; box-shadow: 0 2em 4.5em rgba(0, 0, 0, 0.4);
   background: #1c1c1e; color: #f2f2f4;
+  animation: panel-move 40s cubic-bezier(0.45, 0.05, 0.25, 1) infinite;
+  will-change: transform;
 }
-.p-scroll { animation: panel-scroll 24s cubic-bezier(0.45, 0.05, 0.25, 1) infinite; }
+/* Act 2: cursor grab header keo panel sang trai, xep canh widget Apple */
+@keyframes panel-move {
+  0%, 57%      { transform: translate(0, 0) scale(1); }
+  58.5%        { transform: translate(0, 0) scale(1.03); }
+  65%          { transform: translate(-39.7cqw, 0) scale(1.03); }
+  66.5%, 94%   { transform: translate(-39.7cqw, 0) scale(1); }
+  98.5%, 100%  { transform: translate(0, 0) scale(1); }
+}
+.p-scroll { animation: panel-scroll 40s cubic-bezier(0.45, 0.05, 0.25, 1) infinite; }
 @keyframes panel-scroll {
-  0%, 29%  { transform: translateY(0); }
-  35%, 58% { transform: translateY(-11em); }
-  64%, 100% { transform: translateY(0); }
+  0%, 17.4%  { transform: translateY(0); }
+  21%, 34.8% { transform: translateY(-11em); }
+  38.4%, 100% { transform: translateY(0); }
 }
 .p-head {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -198,10 +209,10 @@ header.site {
 .d.red { background: #ff6b5e; } .d.amber { background: #ffd166; }
 .d.blue { background: #5598e7; } .d.pink { background: #e0568f; }
 /* 2 hang duoc "click" trong demo */
-.row-1999 { animation: row-hi-1 24s infinite; }
-.row-214 { animation: row-hi-2 24s infinite; }
-@keyframes row-hi-1 { 0%, 6%, 13%, 100% { background: transparent; } 8%, 11% { background: rgba(85, 152, 231, 0.22); } }
-@keyframes row-hi-2 { 0%, 35%, 41%, 100% { background: transparent; } 36.5%, 39% { background: rgba(85, 152, 231, 0.22); } }
+.row-1999 { animation: row-hi-1 40s infinite; }
+.row-214 { animation: row-hi-2 40s infinite; }
+@keyframes row-hi-1 { 0%, 3.6%, 7.8%, 100% { background: transparent; } 4.8%, 6.6% { background: rgba(85, 152, 231, 0.22); } }
+@keyframes row-hi-2 { 0%, 21%, 24.6%, 100% { background: transparent; } 21.9%, 23.4% { background: rgba(85, 152, 231, 0.22); } }
 
 .p-progress .bar {
   height: 0.6em; border-radius: 0.3em; overflow: hidden; display: flex;
@@ -250,19 +261,21 @@ header.site {
   font-size: 9px; font-size: 0.95cqw;
   line-height: 1.4;
   color: #2b2b2e;
-  animation: win-story 24s cubic-bezier(0.45, 0.05, 0.25, 1) infinite;
+  animation: win-story 40s cubic-bezier(0.45, 0.05, 0.25, 1) infinite;
   will-change: transform;
 }
 @media (prefers-color-scheme: dark) {
   .mock-window { background: rgba(38, 38, 40, 0.96); border-color: rgba(255, 255, 255, 0.12); color: #e8e8ec; }
 }
 @keyframes win-story {
-  0%, 9%   { transform: translateX(0); }
-  13%, 24% { transform: translateX(70%); }
-  29%, 100% { transform: translateX(0); }
+  0%, 5.4%     { transform: translateX(0); opacity: 1; }
+  7.8%, 14.4%  { transform: translateX(70%); opacity: 1; }
+  17.4%, 52%   { transform: translateX(0); opacity: 1; }
+  54%, 95.5%   { transform: translateX(0); opacity: 0; }
+  98%, 100%    { transform: translateX(0); opacity: 1; }
 }
 .mock-window .bar { display: flex; gap: 0.6em; padding: 0.9em 1em; align-items: center; }
-.mock-window .dot-w { width: 1em; height: 1em; border-radius: 50%; }
+.mock-window .dot-w, .term-bar .dot-w { width: 1em; height: 1em; border-radius: 50%; flex: none; }
 .dot-w.r { background: #ff5f57; } .dot-w.y { background: #febc2e; } .dot-w.g { background: #28c840; }
 .urlbar {
   flex: 1; margin-left: 0.6em; font-family: var(--font-mono); font-size: 0.95em;
@@ -274,16 +287,16 @@ header.site {
 .reloadbar {
   position: absolute; top: 0; left: 0; height: 0.3em; width: 100%; z-index: 3;
   background: #3987e5; transform-origin: left; transform: scaleX(0); opacity: 0;
-  animation: reload 24s linear infinite;
+  animation: reload 40s linear infinite;
 }
 @keyframes reload {
-  0%, 8.9% { transform: scaleX(0); opacity: 0; }
-  9% { opacity: 1; transform: scaleX(0); }
-  10.4% { transform: scaleX(1); opacity: 1; }
-  10.6%, 36.9% { transform: scaleX(0); opacity: 0; }
-  37% { opacity: 1; transform: scaleX(0); }
-  38.4% { transform: scaleX(1); opacity: 1; }
-  38.6%, 100% { transform: scaleX(0); opacity: 0; }
+  0%, 5.3% { transform: scaleX(0); opacity: 0; }
+  5.4% { opacity: 1; transform: scaleX(0); }
+  6.2% { transform: scaleX(1); opacity: 1; }
+  6.4%, 22.1% { transform: scaleX(0); opacity: 0; }
+  22.2% { opacity: 1; transform: scaleX(0); }
+  23% { transform: scaleX(1); opacity: 1; }
+  23.2%, 100% { transform: scaleX(0); opacity: 0; }
 }
 .bpage { position: absolute; inset: 3.2em 0 0; padding: 1em 1.4em; opacity: 0; }
 .bpage .crumb { font-family: var(--font-mono); font-size: 0.9em; color: #7a7a82; margin-bottom: 0.5em; }
@@ -354,62 +367,70 @@ header.site {
 .side-row .sv.you { color: #2b62ad; }
 @media (prefers-color-scheme: dark) { .side-row .sv.you { color: #8fb8ef; } }
 
-.p-lines { animation: k-lines 24s infinite; }
-.p-ticket { animation: k-pa 24s infinite; }
-.p-review { animation: k-pb 24s infinite; }
-@keyframes k-lines { 0%, 9% { opacity: 1; } 11%, 93% { opacity: 0; } 96%, 100% { opacity: 1; } }
-@keyframes k-pa { 0%, 10% { opacity: 0; } 12%, 36% { opacity: 1; } 39%, 100% { opacity: 0; } }
-@keyframes k-pb { 0%, 39% { opacity: 0; } 40%, 90% { opacity: 1; } 93%, 100% { opacity: 0; } }
+.p-lines { animation: k-lines 40s infinite; }
+.p-ticket { animation: k-pa 40s infinite; }
+.p-review { animation: k-pb 40s infinite; }
+@keyframes k-lines { 0%, 5.4% { opacity: 1; } 6.6%, 96% { opacity: 0; } 98.5%, 100% { opacity: 1; } }
+@keyframes k-pa { 0%, 6% { opacity: 0; } 7.2%, 21.6% { opacity: 1; } 23.4%, 100% { opacity: 0; } }
+@keyframes k-pb { 0%, 23.4% { opacity: 0; } 24%, 54% { opacity: 1; } 55.8%, 100% { opacity: 0; } }
 
 .approve-btn {
   position: relative; display: inline-block;
   font-size: 0.95em; font-weight: 700; color: #fff;
   border-radius: 0.5em; padding: 0.5em 1.3em;
   background: #245db3;
-  animation: btn-state 24s infinite;
+  animation: btn-state 40s infinite;
 }
 @keyframes btn-state {
-  0%, 46.9% { background: #245db3; }
-  47%, 88% { background: #1f9d44; }
-  92%, 100% { background: #245db3; }
+  0%, 28.1% { background: #245db3; }
+  28.2%, 52.8% { background: #1f9d44; }
+  55.2%, 100% { background: #245db3; }
 }
 .approve-btn .t-ap, .approve-btn .t-ok { display: block; }
 .approve-btn .t-ok { position: absolute; inset: 0.5em 0 auto 0; text-align: center; opacity: 0; }
-.approve-btn .t-ap { animation: t-ap 24s infinite; }
-.approve-btn .t-ok { animation: t-ok 24s infinite; }
-@keyframes t-ap { 0%, 46.9% { opacity: 1; } 47%, 88% { opacity: 0; } 92%, 100% { opacity: 1; } }
-@keyframes t-ok { 0%, 46.9% { opacity: 0; } 47%, 88% { opacity: 1; } 92%, 100% { opacity: 0; } }
+.approve-btn .t-ap { animation: t-ap 40s infinite; }
+.approve-btn .t-ok { animation: t-ok 40s infinite; }
+@keyframes t-ap { 0%, 28.1% { opacity: 1; } 28.2%, 52.8% { opacity: 0; } 55.2%, 100% { opacity: 1; } }
+@keyframes t-ok { 0%, 28.1% { opacity: 0; } 28.2%, 52.8% { opacity: 1; } 55.2%, 100% { opacity: 0; } }
 
 /* ---- cursor + ripples (z6) ---- */
 .cursor {
   position: absolute; left: 0; top: 0; z-index: 6;
   width: 1.3cqw; min-width: 11px; aspect-ratio: 10 / 14;
-  animation: cur-path 24s cubic-bezier(0.45, 0.05, 0.3, 1) infinite;
+  /* easing PHAI trung panel-move — cung mot cai keo, hai curve la cursor troi khoi diem grab */
+  animation: cur-path 40s cubic-bezier(0.45, 0.05, 0.25, 1) infinite;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   will-change: transform;
 }
 .cursor svg { width: 100%; height: 100%; display: block; }
 /* waypoint bang transform (cqw/cqh = % kich thuoc scene) — khong reflow moi frame */
 @keyframes cur-path {
-  0%, 4% { transform: translate(58cqw, 86cqh); opacity: 1; }
-  8%, 12% { transform: translate(78cqw, 25cqh); opacity: 1; }
-  16%, 26% { transform: translate(74cqw, 40cqh); opacity: 0; }
-  30% { transform: translate(79cqw, 52cqh); opacity: 1; }
-  35%, 38% { transform: translate(79cqw, 73cqh); opacity: 1; }
-  45%, 55% { transform: translate(46.5cqw, 24.2cqh); opacity: 1; }
-  68%, 100% { transform: translate(58cqw, 86cqh); opacity: 1; }
+  0%, 2.4% { transform: translate(58cqw, 86cqh); opacity: 1; }
+  4.8%, 7.2% { transform: translate(78cqw, 25cqh); opacity: 1; }
+  9.6%, 15.6% { transform: translate(74cqw, 40cqh); opacity: 0; }
+  18% { transform: translate(79cqw, 52cqh); opacity: 1; }
+  21%, 22.8% { transform: translate(79cqw, 73cqh); opacity: 1; }
+  27%, 33% { transform: translate(46.5cqw, 24.2cqh); opacity: 1; }
+  40.8%, 56% { transform: translate(58cqw, 86cqh); opacity: 1; }
+  57.5%, 58.5% { transform: translate(78cqw, 13.5cqh); opacity: 1; }
+  65%, 66.5% { transform: translate(38.3cqw, 13.5cqh); opacity: 1; }
+  68.5%, 70% { transform: translate(49.5cqw, 91cqh); opacity: 1; }
+  73%, 95% { transform: translate(55cqw, 78cqh); opacity: 1; }
+  98%, 100% { transform: translate(58cqw, 86cqh); opacity: 1; }
 }
 .ripple {
   position: absolute; z-index: 5; width: 2.6cqw; min-width: 22px; aspect-ratio: 1;
   border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.9);
   transform: scale(0.3); opacity: 0; pointer-events: none;
 }
-.rip-1 { left: 77.2%; top: 24%; animation: rip1 24s infinite; }
-.rip-2 { left: 78.2%; top: 72%; animation: rip2 24s infinite; }
-.rip-3 { left: 45.2%; top: 22.2%; animation: rip3 24s infinite; }
-@keyframes rip1 { 0%, 8% { transform: scale(0.3); opacity: 0; } 8.5% { opacity: 0.9; } 10% { transform: scale(1.6); opacity: 0; } 10.1%, 100% { opacity: 0; } }
-@keyframes rip2 { 0%, 36% { transform: scale(0.3); opacity: 0; } 36.5% { opacity: 0.9; } 38% { transform: scale(1.6); opacity: 0; } 38.1%, 100% { opacity: 0; } }
-@keyframes rip3 { 0%, 46% { transform: scale(0.3); opacity: 0; } 46.5% { opacity: 0.9; } 48% { transform: scale(1.6); opacity: 0; } 48.1%, 100% { opacity: 0; } }
+.rip-1 { left: 77.2%; top: 24%; animation: rip1 40s infinite; }
+.rip-2 { left: 78.2%; top: 72%; animation: rip2 40s infinite; }
+.rip-3 { left: 45.2%; top: 22.2%; animation: rip3 40s infinite; }
+.rip-4 { left: 48.7%; top: 89.5%; animation: rip4 40s infinite; }
+@keyframes rip1 { 0%, 4.8% { transform: scale(0.3); opacity: 0; } 5.1% { opacity: 0.9; } 6% { transform: scale(1.6); opacity: 0; } 6.1%, 100% { opacity: 0; } }
+@keyframes rip2 { 0%, 21.6% { transform: scale(0.3); opacity: 0; } 21.9% { opacity: 0.9; } 22.8% { transform: scale(1.6); opacity: 0; } 22.9%, 100% { opacity: 0; } }
+@keyframes rip3 { 0%, 27.6% { transform: scale(0.3); opacity: 0; } 27.9% { opacity: 0.9; } 28.8% { transform: scale(1.6); opacity: 0; } 28.9%, 100% { opacity: 0; } }
+@keyframes rip4 { 0%, 68.5% { transform: scale(0.3); opacity: 0; } 69% { opacity: 0.9; } 70.2% { transform: scale(1.6); opacity: 0; } 70.3%, 100% { opacity: 0; } }
 
 /* ---- notification toast (z5) — roi xuong SAU khi approve ---- */
 .toast {
@@ -421,22 +442,101 @@ header.site {
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
   color: #1b1b1b;
-  animation: toast-cycle 24s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+  animation: toast-cycle 40s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
   will-change: transform, opacity;
 }
 @media (prefers-color-scheme: dark) {
   .toast { background: rgba(44, 44, 46, 0.92); border-color: rgba(255, 255, 255, 0.14); color: #f2f2f4; }
 }
 @keyframes toast-cycle {
-  0%, 51%   { opacity: 0; transform: translateY(-14px) scale(0.98); }
-  54%, 82%  { opacity: 1; transform: translateY(0) scale(1); }
-  86%, 100% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  0%, 30.6%   { opacity: 0; transform: translateY(-14px) scale(0.98); }
+  32.4%, 49.2%  { opacity: 1; transform: translateY(0) scale(1); }
+  51.6%, 100% { opacity: 0; transform: translateY(-10px) scale(0.98); }
 }
 .toast img { width: 30px; height: 30px; border-radius: 7px; flex: none; }
 .toast .toast-text { min-width: 0; line-height: 1.35; }
 .toast b { display: block; font-size: 12px; }
 .toast span { display: block; font-size: 11.5px; opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .toast code { font-size: 10.5px; }
+
+/* ---- Act 2: widget mac dinh cua Apple (cot trai, tang desktop nhu panel) ---- */
+.awidget {
+  position: absolute; left: 4.5%; width: 21cqw; z-index: 1;
+  border-radius: 1.6cqw; padding: 1.3cqw 1.5cqw;
+  font-family: var(--font-ui); font-size: 1.05cqw; line-height: 1.4; color: #fff;
+  background: rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: 0 1.2cqw 3cqw rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  animation: aw-in 40s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+}
+@media (prefers-color-scheme: dark) {
+  .awidget { background: rgba(40, 40, 46, 0.55); border-color: rgba(255, 255, 255, 0.16); }
+}
+.w-weather { top: 13cqh; height: 23cqh; }
+.w-cal { top: 39.5cqh; height: 23cqh; }
+@keyframes aw-in {
+  0%, 53.5%     { opacity: 0; transform: translateY(1.2cqh); }
+  56.5%, 93.5%  { opacity: 1; transform: translateY(0); }
+  96.5%, 100%   { opacity: 0; transform: translateY(1.2cqh); }
+}
+.aw-top { display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.95em; opacity: 0.92; }
+.aw-sun {
+  width: 2.4cqw; height: 2.4cqw; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 35% 35%, #ffe9a8, #ffc93c 65%, #f5a623);
+  box-shadow: 0 0 1.2cqw rgba(255, 214, 102, 0.8);
+}
+.aw-temp { font-size: 2.9em; font-weight: 300; letter-spacing: -0.02em; line-height: 1.1; }
+.aw-hilo { font-size: 0.88em; opacity: 0.85; }
+.cal-dow { font-size: 0.85em; font-weight: 700; color: #ff6b5e; letter-spacing: 0.09em; }
+.cal-day { font-size: 2.5em; font-weight: 300; line-height: 1.05; }
+.cal-ev { display: flex; gap: 0.6cqw; align-items: center; font-size: 0.88em; margin-top: 0.55cqw; }
+.cal-ev i { width: 0.35cqw; height: 1.5cqw; border-radius: 0.2cqw; background: #5598e7; flex: none; }
+.cal-ev.g i { background: #4cd964; }
+
+/* ---- Act 2: terminal Claude Code (z2 — tang cua so) ---- */
+.term {
+  position: absolute; left: 59%; top: 13%; width: 37%; height: 64%; z-index: 2;
+  border-radius: 10px; overflow: hidden;
+  background: rgba(24, 24, 27, 0.96); border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  font-family: var(--font-mono); font-size: 1cqw; line-height: 1.75; color: #d8d8de;
+  opacity: 0; transform: scale(0.97);
+  animation: term-in 40s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+}
+@keyframes term-in {
+  0%, 70.5%    { opacity: 0; transform: scale(0.97); }
+  73%, 95.5%   { opacity: 1; transform: scale(1); }
+  97.5%, 100%  { opacity: 0; transform: scale(0.97); }
+}
+.term-bar {
+  display: flex; gap: 0.6em; padding: 0.8em 1em; align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+}
+.term-title { margin-left: 0.6em; font-size: 0.9em; color: #8e8e96; }
+.term-body { padding: 0.9em 1.4em; }
+.t-line { white-space: nowrap; overflow: hidden; }
+.t-dim { color: #7c7c86; }
+.t-star { color: #d97757; }
+.t-prompt { color: #8fb8ef; }
+.t-good { color: #4cd964; }
+.t-cmd {
+  display: inline-block; vertical-align: bottom;
+  overflow: hidden; white-space: nowrap; width: 0;
+  animation: type-cmd 40s steps(35, end) infinite;
+}
+@keyframes type-cmd {
+  0%, 74.5% { width: 0; }
+  82%, 96%  { width: 35ch; }
+  98%, 100% { width: 0; }
+}
+.t-r1 { opacity: 0; animation: tr1 40s infinite; }
+.t-r2 { opacity: 0; animation: tr2 40s infinite; }
+.t-r3 { opacity: 0; animation: tr3 40s infinite; }
+@keyframes tr1 { 0%, 83.5% { opacity: 0; } 84.5%, 96% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes tr2 { 0%, 85.5% { opacity: 0; } 86.5%, 96% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes tr3 { 0%, 87.5% { opacity: 0; } 88.5%, 96% { opacity: 1; } 98%, 100% { opacity: 0; } }
 
 .desktop-mock .dock {
   position: absolute; bottom: 3%; left: 50%; transform: translateX(-50%); z-index: 4;
@@ -551,14 +651,16 @@ footer.site .legalnote { margin-top: 16px; max-width: 76ch; }
   .pricing .btn { margin-left: 0; }
   .desktop-mock { border-radius: 12px; }
   .desktop-mock .menubar { font-size: 10px; gap: 10px; height: 22px; }
-  .desktop-mock .dock { display: none; }
+  /* dock thu nho thay vi an: cu click dock (rip-4) van co dich de tro */
+  .desktop-mock .dock { gap: 6px; padding: 5px 8px; }
+  .desktop-mock .dock i { width: 16px; height: 16px; border-radius: 5px; }
   .toast { width: min(210px, 56%); padding: 8px 10px; }
 }
 
 /* Browser cu khong ho tro container query: an replica/cursor/ripple,
    scene degrade ve desktop + window + toast — van du nghia. */
 @supports not (width: 1cqw) {
-  .panel-replica, .cursor, .ripple { display: none; }
+  .panel-replica, .cursor, .ripple, .awidget, .term { display: none; }
 }
 
 /* ---------- motion: tat sach, composition tinh van du nghia ----------
@@ -566,10 +668,12 @@ footer.site .legalnote { margin-top: 16px; max-width: 76ch; }
    toast hien san, nut Approve mau mac dinh, khong cursor/ripple. */
 @media (prefers-reduced-motion: reduce) {
   .mock-window, .toast, .p-scroll, .reloadbar, .cursor,
-  .ripple, .rip-1, .rip-2, .rip-3,
+  .ripple, .rip-1, .rip-2, .rip-3, .rip-4,
   .row-1999, .row-214, .p-lines, .p-ticket, .p-review,
-  .approve-btn, .approve-btn .t-ap, .approve-btn .t-ok { animation: none; }
+  .approve-btn, .approve-btn .t-ap, .approve-btn .t-ok,
+  .panel-replica, .awidget, .term, .t-cmd, .t-r1, .t-r2, .t-r3 { animation: none; }
   .toast { opacity: 1; transform: none; }
   .p-lines { opacity: 1; }
+  /* pose tinh = Act 1: panel ben phai, browser wireframe; widget/term (base opacity 0) an */
   .cursor, .ripple { display: none; }
 }

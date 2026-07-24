@@ -45,7 +45,7 @@
   </div>
 
   <div class="wrap scene-wrap">
-    <div class="desktop-mock" role="img" aria-label="Cảnh demo: desktop macOS với panel sprint Widget for Jira, một cửa sổ trình duyệt mở ticket Jira có nút Approve, và một notification sprint">
+    <div class="desktop-mock" role="img" aria-label="Cảnh demo: desktop macOS với panel sprint Widget for Jira, cửa sổ trình duyệt mở ticket Jira có nút Approve, widget thời tiết và lịch của Apple, và một terminal chạy Claude Code">
       <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="right">Th 4 9:41</span></div>
 
       <div class="panel-replica" aria-hidden="true">
@@ -177,10 +177,35 @@
         </div>
       </div>
 
+      <div class="awidget w-weather" aria-hidden="true">
+        <div class="aw-top"><span>Đà Nẵng</span><span class="aw-sun"></span></div>
+        <div class="aw-temp">31°</div>
+        <div class="aw-hilo">33° / 26° · Nắng</div>
+      </div>
+      <div class="awidget w-cal" aria-hidden="true">
+        <div class="cal-dow">TH 4</div>
+        <div class="cal-day">24</div>
+        <div class="cal-ev"><i></i><span>09:00 Standup</span></div>
+        <div class="cal-ev g"><i></i><span>14:00 Sprint review</span></div>
+      </div>
+
+      <div class="term" aria-hidden="true">
+        <div class="term-bar"><span class="dot-w r"></span><span class="dot-w y"></span><span class="dot-w g"></span><span class="term-title">claude — nova-app</span></div>
+        <div class="term-body">
+          <div class="t-line t-dim">$ claude</div>
+          <div class="t-line"><span class="t-star">✻</span> Claude Code · nova-app</div>
+          <div class="t-line"><span class="t-prompt">&gt;</span> <span class="t-cmd">fix NOVA-1999: add retry backoff ×3</span></div>
+          <div class="t-line t-r1"><span class="t-star">●</span> Reading src/payments/retry.ts…</div>
+          <div class="t-line t-r2"><span class="t-star">●</span> Edit retry.ts — exponential backoff ×3</div>
+          <div class="t-line t-r3"><span class="t-good">✓</span> 128 tests passed · ready to commit</div>
+        </div>
+      </div>
+
       <div class="cursor" aria-hidden="true"><svg viewBox="0 0 10 14" fill="#ffffff" stroke="#1b1b1b" stroke-width="0.8"><path d="M1 1 L9 8 L5.5 8.6 L7.4 12.6 L5.6 13.4 L3.8 9.4 L1 11.6 Z"></path></svg></div>
       <div class="ripple rip-1"></div>
       <div class="ripple rip-2"></div>
       <div class="ripple rip-3"></div>
+      <div class="ripple rip-4"></div>
 
       <div class="toast" aria-hidden="true">
         <img src="/assets/icon-64.png" alt="" width="30" height="30">
@@ -191,7 +216,7 @@
       </div>
       <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
-    <p class="mock-caption"><code>demo</code>Thấy ticket đứng im, bấm — nó mở trong trình duyệt. Kéo xuống hàng chờ duyệt, bấm tiếp, Approve trên Jira web. Panel vẫn chỉ-đọc: mọi thao tác diễn ra trên chính Jira.</p>
+    <p class="mock-caption"><code>demo</code>Thấy ticket đứng im, mở nó trong trình duyệt; duyệt thứ đang chờ bạn trên Jira web. Rồi kéo panel xếp cạnh widget của Apple, mở Claude Code và bắt tay làm việc. Panel vẫn chỉ-đọc — mọi thao tác diễn ra trên chính Jira.</p>
   </div>
 
   <section id="features" class="alt">
