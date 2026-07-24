@@ -38,6 +38,13 @@ The app posts local macOS notifications about changes in your sprint (status
 changes, reassignments, tickets added/removed). Notification content is
 generated entirely on your device.
 
+## Purchases
+
+The app is sold as a one-time purchase on the Mac App Store. Payment is
+processed entirely by Apple, acting as the merchant of record. The developer
+never receives your payment details, billing name, or address — only Apple's
+standard aggregated, anonymous sales reports.
+
 ## Data deletion
 
 - Remove the token: Settings → clear token, or run `jira-widget --clear-token`,
@@ -65,6 +72,7 @@ chỉ đi thẳng giữa máy của bạn và máy chủ Jira do chính bạn c�
 Personal Access Token nằm trong Keychain của macOS; nhà phát triển không bao
 giờ nhìn thấy nó. Cấu hình và log đều lưu cục bộ trên máy. Xoá app + thư mục
 `~/Library/Application Support/jira-widget/` + token trong Keychain là xoá
-sạch mọi dữ liệu.
+sạch mọi dữ liệu. Khoản thanh toán $1.99 do Apple xử lý toàn bộ — nhà phát triển
+không bao giờ thấy thông tin thẻ hay địa chỉ của bạn.
 
 Liên hệ: aabooksapp@gmail.com

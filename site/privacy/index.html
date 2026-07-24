@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — Widget for Jira</title>
+  <meta name="description" content="Widget for Jira collects no data. No analytics, no tracking, no developer server — your data never leaves your Mac.">
+  <link rel="icon" href="/assets/icon-64.png">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="/"><img src="/assets/icon-64.png" alt="" width="26" height="26">Widget for Jira</a>
+    <nav class="links">
+      <a class="keep" href="/privacy/">Privacy</a>
+      <a class="keep" href="/terms/">Terms</a>
+      <a class="lang" href="/vi/" title="Tiếng Việt">VI</a>
+    </nav>
+  </div>
+</header>
+
+<article class="legal">
+  <h1>Privacy Policy</h1>
+  <p class="meta">Effective date: 24 July 2026 · Developer: ISEMI COMPANY LIMITED · Contact: <a href="mailto:aabooksapp@gmail.com">aabooksapp@gmail.com</a></p>
+
+  <h2>Summary</h2>
+  <p>This app does <b>not</b> collect, store, transmit, or sell any personal data to the developer or to any third party. There are no analytics, no advertising SDKs, no crash reporting, and no tracking of any kind. All data stays on your Mac or travels only between your Mac and the Jira server <b>you</b> configure.</p>
+
+  <h2>What the app does with data</h2>
+  <ul>
+    <li><b>Jira data.</b> The app connects directly from your Mac to the Jira Server/Data Center or Jira Cloud site you enter in Settings, authenticated with your own credential, and reads sprint, board, and issue data through the Jira REST API over HTTPS. That data is used solely to render the panel on your screen and to show local notifications. It is never sent anywhere other than back to your own Jira server.</li>
+    <li><b>Your credential.</b> Your Personal Access Token or API token is stored in the macOS Keychain on your device. It is transmitted only to the Jira server you configured, over HTTPS. The developer never sees or receives it.</li>
+    <li><b>Configuration.</b> Settings (Jira URL, board id, display thresholds, …) are stored locally in <code>~/Library/Application Support/jira-widget/config.toml</code>.</li>
+    <li><b>Logs.</b> Diagnostic logs are written locally to <code>~/Library/Logs/jira-widget.log</code> and are never uploaded.</li>
+  </ul>
+
+  <h2>Network connections</h2>
+  <p>The only network destination is the Jira server you configure. The app makes no other connections — no update pings, no telemetry, no third-party services.</p>
+
+  <h2>Notifications</h2>
+  <p>The app posts local macOS notifications about changes in your sprint (status changes, reassignments, tickets added/removed). Notification content is generated entirely on your device.</p>
+
+  <h2>Purchases</h2>
+  <p>The app is sold as a one-time purchase on the Mac App Store. Payment is processed entirely by Apple, acting as the merchant of record. The developer never receives your payment details, billing name, or address — only Apple's standard aggregated, anonymous sales reports.</p>
+
+  <h2>Data deletion</h2>
+  <ul>
+    <li>Remove the credential: Settings → clear token, or run <code>jira-widget --clear-token</code>, or delete the <code>jira-widget</code> item in Keychain Access.</li>
+    <li>Remove all local data: delete the app, the folder <code>~/Library/Application Support/jira-widget/</code>, and the log file above.</li>
+  </ul>
+
+  <h2>Children's privacy</h2>
+  <p>The app is a workplace productivity tool and does not knowingly collect any data from anyone, including children.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If the app ever changes what it does with data, this document will be updated and the effective date revised before that version ships.</p>
+
+  <hr>
+
+  <h1>Chính sách quyền riêng tư <small>(tiếng Việt — bản tóm tắt)</small></h1>
+  <p>Ứng dụng <b>không thu thập bất kỳ dữ liệu nào</b> về máy chủ của nhà phát triển hay bên thứ ba: không analytics, không quảng cáo, không tracking. Dữ liệu Jira chỉ đi thẳng giữa máy của bạn và máy chủ Jira do chính bạn cấu hình, qua HTTPS. Token nằm trong Keychain của macOS; nhà phát triển không bao giờ nhìn thấy nó. Cấu hình và log đều lưu cục bộ trên máy. Xoá app + thư mục <code>~/Library/Application Support/jira-widget/</code> + token trong Keychain là xoá sạch mọi dữ liệu. Khoản thanh toán $1.99 do Apple xử lý toàn bộ — nhà phát triển không bao giờ thấy thông tin thẻ hay địa chỉ của bạn.</p>
+  <p>Liên hệ: <a href="mailto:aabooksapp@gmail.com">aabooksapp@gmail.com</a></p>
+</article>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <div>© 2026 ISEMI COMPANY LIMITED</div>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/terms/">Terms of Use</a>
+        <a href="mailto:aabooksapp@gmail.com">Support</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

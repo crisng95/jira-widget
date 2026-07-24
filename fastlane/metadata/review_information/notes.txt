@@ -3,14 +3,14 @@ A read-only desktop panel for macOS showing the state of the active sprint on on
 
 HOW TO TEST
 1. On first launch an onboarding window opens. The UI is localized in English and Vietnamese and follows the macOS system language.
-2. Enter the Jira Server/DC base URL and a Personal Access Token, test the connection, pick a board, and save. The panel then appears pinned to the desktop layer (glance at the desktop or press F11 to see it).
+2. Enter your Jira URL and credential (Server/DC: Personal Access Token; Cloud: email + API token), test the connection, pick a board, and save. The panel then appears pinned to the desktop layer (glance at the desktop or press F11 to see it).
 3. The menu-bar icon has Show/Hide, Collapse/Expand, Only-my-work, Refresh, Move panel, Settings, Start with macOS, and Quit.
 
 DEMO ACCESS
-[FILL IN — public demo Jira URL + Personal Access Token reachable from the reviewer's network]
+[FILL IN — easiest: a free Jira Cloud demo site, e.g. https://<demo>.atlassian.net, with a demo user email + API token; reachable from any network.]
 [OR if demo mode ships in this build: choose "Use sample data" in the onboarding window — no server or account needed.]
 
 NOTES
 • All network traffic goes exclusively to the Jira host the user configures. No developer server, no analytics, no data collection of any kind. The Personal Access Token is stored in the macOS Keychain.
-• Works with Jira Server / Data Center (PAT auth). Jira Cloud is intentionally not supported yet, as stated in the description.
+• Works with Jira Server / Data Center (Personal Access Token) and Jira Cloud (email + API token), as stated in the description.
 • This is an independent companion app for Atlassian Jira; the description carries the standard trademark disclaimer.

@@ -50,7 +50,9 @@ Bundle id `com.isemi.jiraw` không sao — bundle id không hiển thị và kh�
 
 | Field | Giá trị |
 |---|---|
-| Price | **Free (0đ)** |
+| Price | **$1.99 USD** một lần (Apple tự quy đổi tiền tệ từng storefront) |
+| Paid Apps Agreement | ✅ đã ký + bank/tax đã setup (24/07/2026) — điều kiện bắt buộc của app trả phí |
+| Small Business Program | Nên đăng ký tại developer.apple.com/app-store/small-business-program/ — hoa hồng 15% thay vì 30% → nhận ~$1.69/lượt |
 | Availability | Tất cả territories (hoặc thu hẹp tuỳ anh) |
 | Pre-order | Không |
 
@@ -64,7 +66,7 @@ search/charts. Phù hợp tool nội bộ mà vẫn hưởng notarize + auto-upd
 
 | Câu hỏi ASC | Trả lời |
 |---|---|
-| Privacy Policy URL | `https://github.com/crisng95/jira-widget/blob/main/docs/privacy-policy.md` — file đã soạn sẵn trong repo, **nhớ push lên GitHub trước khi submit** (hoặc thay bằng trang trên domain isemi nếu có) |
+| Privacy Policy URL | `https://widjira.isemi.io/privacy/` — trang trên homepage (`site/`), phải live TRƯỚC khi push metadata (§9 bước 2) |
 | Does this app collect data? | **No — Data Not Collected** |
 
 Căn cứ (đúng với code hiện tại, đã kiểm):
@@ -113,13 +115,13 @@ PRIVATE BY DESIGN
 • Talks only to the Jira server you configure — no analytics, no tracking, no third-party servers
 
 REQUIREMENTS
-• Jira Server or Data Center 8.14 or later (Personal Access Tokens). Jira Cloud is not supported yet.
+• Works with Jira Server / Data Center 8.14+ (Personal Access Token) and Jira Cloud (email + API token).
 • A Jira account with permission to view the board you follow.
 • English and Vietnamese interface.
 
 Jira is a registered trademark of Atlassian Pty Ltd. This app is an independent product and is not affiliated with, endorsed by, or sponsored by Atlassian.
 ```
-(2.007 ký tự — còn dư nhiều)
+(~2.000 ký tự — còn dư nhiều; bản chuẩn luôn là `fastlane/metadata/en-US/description.txt`)
 
 ### Keywords (≤100, phân cách bằng dấu phẩy, không space sau phẩy)
 
@@ -134,7 +136,7 @@ scrum,agile,standup,kanban,board,team,dashboard,tracker,burndown,menubar,backlog
 | Field | Giá trị |
 |---|---|
 | Support URL | `https://github.com/crisng95/jira-widget/issues` |
-| Marketing URL (optional) | `https://github.com/crisng95/jira-widget` |
+| Marketing URL (optional) | `https://widjira.isemi.io/` (bản VI: `https://widjira.isemi.io/vi/`) |
 | Copyright | `2026 ISEMI COMPANY LIMITED` |
 
 ### What's New
@@ -190,7 +192,7 @@ RIÊNG TƯ TỪ THIẾT KẾ
 • Chỉ kết nối tới đúng máy chủ Jira bạn cấu hình — không analytics, không tracking, không máy chủ bên thứ ba
 
 YÊU CẦU
-• Jira Server hoặc Data Center 8.14 trở lên (Personal Access Token). Chưa hỗ trợ Jira Cloud.
+• Hoạt động với Jira Server / Data Center 8.14+ (Personal Access Token) và Jira Cloud (email + API token).
 • Tài khoản Jira có quyền xem board bạn theo dõi.
 • Giao diện tiếng Việt và tiếng Anh.
 
@@ -233,17 +235,18 @@ locale vi (ASC cho phép screenshots khác nhau theo từng locale).
 | Email | aabooksapp@gmail.com |
 | Sign-in required | **Yes** → bắt buộc cung cấp cách test (xem cảnh báo dưới) |
 
-### ⚠️ Vấn đề lớn nhất của lần submit này: reviewer phải test được app (Guideline 2.1)
+### ⚠️ Reviewer phải test được app (Guideline 2.1) — đã có lối dễ nhờ Cloud
 
-App đòi Jira Server/DC + PAT. Jira của mình nằm sau VPN → **reviewer không kết nối được
-→ gần như chắc chắn bị reject "we were unable to review your app"**. Ba đường ra, xếp theo
-độ thực dụng:
+App cần một Jira thật để hiển thị. Jira DC của mình sau VPN nên không dùng cho review
+được, nhưng app giờ hỗ trợ **Jira Cloud** nên lối thực dụng nhất là:
 
-1. **Thêm Demo mode (khuyên làm — nhỏ):** nút "Dùng dữ liệu mẫu" trong Settings, nạp
-   snapshot từ bộ fixture 9 ticket đã có sẵn trong test của `snapshot.rs`/`diff.rs`,
-   panel hiện banner "DEMO". Reviewer không cần server nào cả. Ghi rõ trong Review Notes.
-2. Dựng một Jira DC trial public tạm (đắt công, phải sống suốt thời gian review).
-3. Chỉ nộp video demo qua attachment — App Review vẫn thường đòi tự bấm được app, rủi ro cao.
+1. **Tạo Jira Cloud site miễn phí làm demo (khuyên làm — dễ nhất):** site
+   `<tên>.atlassian.net` free tier, 1 board scrum + ~10 ticket mẫu, 1 user demo +
+   API token. Reviewer vào được từ mọi mạng. Điền URL + email + token vào mục
+   DEMO ACCESS của Review Notes là xong.
+2. Demo mode ("Dùng dữ liệu mẫu" từ fixture 9 ticket trong test `snapshot.rs`) —
+   vẫn đáng làm ở vai trò dự phòng, và để user mới xem thử app trước khi có Jira.
+3. Chỉ nộp video demo qua attachment — rủi ro cao, App Review thường đòi tự bấm được app.
 
 ### Review Notes (paste nguyên khối, đã kèm chỗ trống demo)
 
@@ -253,16 +256,16 @@ A read-only desktop panel for macOS showing the state of the active sprint on on
 
 HOW TO TEST
 1. On first launch an onboarding window opens. The UI is localized in English and Vietnamese and follows the macOS system language.
-2. Enter the Jira Server/DC base URL and a Personal Access Token, test the connection, pick a board, and save. The panel then appears pinned to the desktop layer (glance at the desktop or press F11 to see it).
+2. Enter your Jira URL and credential (Server/DC: Personal Access Token; Cloud: email + API token), test the connection, pick a board, and save. The panel then appears pinned to the desktop layer (glance at the desktop or press F11 to see it).
 3. The menu-bar icon has Show/Hide, Collapse/Expand, Only-my-work, Refresh, Move panel, Settings, Start with macOS, and Quit.
 
 DEMO ACCESS
-[FILL IN — public demo Jira URL + Personal Access Token reachable from the reviewer's network]
+[FILL IN — easiest: a free Jira Cloud demo site, e.g. https://<demo>.atlassian.net, with a demo user email + API token; reachable from any network.]
 [OR if demo mode ships in this build: choose "Use sample data" in the onboarding window — no server or account needed.]
 
 NOTES
 • All network traffic goes exclusively to the Jira host the user configures. No developer server, no analytics, no data collection of any kind. The Personal Access Token is stored in the macOS Keychain.
-• Works with Jira Server / Data Center (PAT auth). Jira Cloud is intentionally not supported yet, as stated in the description.
+• Works with Jira Server / Data Center (Personal Access Token) and Jira Cloud (email + API token), as stated in the description.
 • This is an independent companion app for Atlassian Jira; the description carries the standard trademark disclaimer.
 ```
 
@@ -287,7 +290,7 @@ Store là một cấu hình build **khác**, còn các việc sau:
 | 7 | Ký & đóng gói | ❌ Cert **Apple Distribution** + **Mac Installer Distribution** trong ASC → ký .app với entitlements + profile → `xcrun productbuild --sign` ra `.pkg` → upload bằng **Transporter**. Làm theo guide chính thức Tauri v2 "App Store distribution". `signingIdentity: "-"` hiện tại chỉ dành cho bản .dmg ngoài store. |
 | 8 | Kiến trúc | Hiện arm64-only — MAS chấp nhận (máy Intel không cài được). Muốn phủ Intel: build `--target universal-apple-darwin`. |
 | 9 | Version | Khuyên nâng `version` trong `tauri.conf.json` → **`1.0.0`** cho bản đầu lên store (ASC đối chiếu CFBundleShortVersionString). |
-| 10 | Demo mode cho App Review | ❌ xem mục 7 — thực tế là bắt buộc vì Jira sau VPN. |
+| 10 | Demo cho App Review | ⚠️ đã có lối dễ: Jira Cloud site miễn phí làm demo (mục 7); demo mode thành phương án dự phòng. |
 | 11 | minimumSystemVersion | Đang `11.0` — nếu chuyển autostart sang SMAppService thì nâng lên `13.0`, đồng thời ASC hiện đúng yêu cầu hệ điều hành. |
 
 ### Lối ít công hơn nếu mục tiêu chỉ là "teammate cài không bị chặn"
@@ -303,7 +306,14 @@ sau.
 ## 9. Thứ tự thao tác đề xuất
 
 1. ~~Chốt tên app~~ → đã chốt **Widget for Jira**, repo + metadata đổi xong.
-2. Push repo lên GitHub để **privacy policy URL sống**.
+2. **Homepage lên sóng** (bắt buộc trước khi push metadata — privacy URL trỏ về đây):
+   a. DNS của `isemi.io`: thêm bản ghi **CNAME `widjira` → `crisng95.github.io`**.
+   b. Push repo lên GitHub (`site/` + `.github/workflows/pages.yml` có sẵn).
+   c. Repo → Settings → Pages → Source: **GitHub Actions**; Custom domain:
+      `widjira.isemi.io` → chờ DNS check xanh → bật **Enforce HTTPS**. (Khuyên:
+      verify domain `isemi.io` trong Settings → Pages để chống subdomain takeover.)
+   d. `curl -sI https://widjira.isemi.io/ https://widjira.isemi.io/privacy/ | grep HTTP`
+      phải ra `200` rồi mới push metadata.
 3. Đẩy metadata lên ASC (điền mục 1, 4, 5, privacy URL + review notes tự động):
 
    ```bash
@@ -313,7 +323,7 @@ sau.
    Issuer ID lấy ở **ASC → Users and Access → Integrations → App Store Connect API**.
    Key mặc định: `~/.appstoreconnect/private_keys/AuthKey_883W4Z3Z99.p8`; dùng key khác
    thì thêm `ASC_KEY_ID=... ASC_KEY_PATH=...`.
-4. Trên ASC UI còn 4 thứ deliver không đụng được: **Pricing** (Free), bảng câu hỏi
+4. Trên ASC UI còn 4 thứ deliver không đụng được: **Pricing** (set $1.99), bảng câu hỏi
    **App Privacy** (chọn Data Not Collected), **Age rating** (None hết → 4+), và
    **số điện thoại** trong App Review Information.
 5. Làm 4 việc code blocker (#3–#6 mục 8) + demo mode (#10) → build MAS → upload .pkg.

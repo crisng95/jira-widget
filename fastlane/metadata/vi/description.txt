@@ -23,7 +23,7 @@ RIÊNG TƯ TỪ THIẾT KẾ
 • Chỉ kết nối tới đúng máy chủ Jira bạn cấu hình — không analytics, không tracking, không máy chủ bên thứ ba
 
 YÊU CẦU
-• Jira Server hoặc Data Center 8.14 trở lên (Personal Access Token). Chưa hỗ trợ Jira Cloud.
+• Hoạt động với Jira Server / Data Center 8.14+ (Personal Access Token) và Jira Cloud (email + API token).
 • Tài khoản Jira có quyền xem board bạn theo dõi.
 • Giao diện tiếng Việt và tiếng Anh.
 

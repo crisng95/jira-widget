@@ -1,1 +1,1 @@
-https://github.com/crisng95/jira-widget/blob/main/docs/privacy-policy.md
+https://widjira.isemi.io/privacy/

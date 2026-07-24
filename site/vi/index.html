@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Widget for Jira — sprint đang chạy, lúc nào cũng trong tầm mắt</title>
+  <meta name="description" content="Panel chỉ-đọc ghim lên desktop macOS: tiến độ sprint, cảnh báo rủi ro, hàng đợi bàn giao và tải của team từ board Jira của bạn. Riêng tư từ thiết kế. Mua một lần $1.99.">
+  <link rel="icon" href="/assets/icon-64.png">
+  <link rel="apple-touch-icon" href="/assets/icon-180.png">
+  <link rel="stylesheet" href="/styles.css">
+  <meta property="og:title" content="Widget for Jira — sprint đang chạy, lúc nào cũng trong tầm mắt">
+  <meta property="og:description" content="Panel sprint chỉ-đọc cho desktop macOS. Không analytics, không tracking — dữ liệu không rời khỏi máy bạn.">
+  <meta property="og:image" content="https://widjira.isemi.io/assets/icon-512.png">
+  <meta property="og:url" content="https://widjira.isemi.io/vi/">
+  <meta name="twitter:card" content="summary">
+  <link rel="alternate" hreflang="en" href="https://widjira.isemi.io/">
+  <link rel="alternate" hreflang="vi" href="https://widjira.isemi.io/vi/">
+  <link rel="alternate" hreflang="x-default" href="https://widjira.isemi.io/">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="/vi/"><img src="/assets/icon-64.png" alt="" width="26" height="26">Widget for Jira</a>
+    <nav class="links" aria-label="Chính">
+      <a href="#features">Tính năng</a>
+      <a href="#transparency">Minh bạch</a>
+      <a href="#pricing">Giá</a>
+      <a href="/privacy/">Quyền riêng tư</a>
+      <a href="/terms/">Điều khoản</a>
+      <a class="lang" href="/" lang="en" hreflang="en" title="English">EN</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <p class="eyebrow">app menu bar cho macOS · jira server / dc / cloud</p>
+    <h1>Sprint đang chạy, lúc nào cũng trong tầm mắt.</h1>
+    <p class="lede">Panel gọn, chỉ-đọc, ghim lên desktop macOS: tiến độ sprint, cảnh báo rủi ro, hàng đợi bàn giao và tải của team từ board Jira bạn theo dõi — tự làm mới mỗi 60 giây, không bao giờ choán chỗ.</p>
+    <div class="cta">
+      <a class="btn primary" href="#pricing">Sắp có trên Mac App Store</a>
+    </div>
+    <p class="info-strip"><span><b>chỉ đọc</b></span><span>macOS Keychain</span><span>0 telemetry</span><span><b>$1.99</b> một lần</span></p>
+  </div>
+
+  <div class="wrap scene-wrap">
+    <div class="desktop-mock" role="img" aria-label="Cảnh demo: desktop macOS với panel sprint Widget for Jira, một cửa sổ trình duyệt mở ticket Jira có nút Approve, và một notification sprint">
+      <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="right">Th 4 9:41</span></div>
+
+      <div class="panel-replica" aria-hidden="true">
+        <div class="p-scroll">
+          <div class="p-head"><span>Sprint 24/07</span><span class="count">9h 42m</span></div>
+          <p class="p-sub"><i>●</i>cập nhật 10:06</p>
+          <div class="p-sec">
+            <h4>Cảnh báo <span class="pill">8</span></h4>
+            <div class="p-row row-1999"><i class="d red"></i><span class="key">NOVA-1999</span><span class="st">Open</span><span class="who">jordan.lee</span><span class="age">17d</span></div>
+            <div class="p-row"><i class="d pink"></i><span class="key">NOVA-2054</span><span class="st">In Test</span><span class="who">sam.rivera</span><span class="age">8d</span></div>
+            <div class="p-row"><i class="d amber"></i><span class="st">Chưa xong, sắp hết sprint</span><span class="who">6</span></div>
+          </div>
+          <div class="p-sec p-progress">
+            <h4>Tiến độ <span class="pill p-num">42/48 · 88%</span></h4>
+            <div class="bar"><i class="f1"></i><i class="f2"></i></div>
+            <div class="legend"><span><b>42</b> xong</span><span><b>5</b> đang làm</span><span><b>1</b> chưa làm</span></div>
+          </div>
+          <div class="p-sec">
+            <h4>Phân bổ <span class="pill">48</span></h4>
+            <div class="p-alloc">
+              <div class="donut"></div>
+              <div class="leg">
+                <span><i style="background:#ffd166"></i>alex.kim <span class="pct p-num">10 · 21%</span></span>
+                <span><i style="background:#4cd964"></i>jordan.lee <span class="pct p-num">10 · 21%</span></span>
+                <span><i style="background:#e0568f"></i>casey.park <span class="pct p-num">9 · 19%</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="p-sec">
+            <h4>Theo member <span class="pill p-num">42/48</span></h4>
+            <div class="p-mem">
+              <div class="m"><div class="l1"><b>alex.kim</b><span class="ok p-num">10/10 ✓</span></div><div class="mb"><i style="width:100%"></i></div></div>
+              <div class="m"><div class="l1"><b>jordan.lee</b><span class="p-num">6/9 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+              <div class="m"><div class="l1"><b>casey.park</b><span class="p-num">5/6 · 83%</span></div><div class="mb"><i style="width:83%"></i></div></div>
+              <div class="m"><div class="l1"><b>sam.rivera</b><span class="p-num">4/6 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+            </div>
+          </div>
+          <div class="p-sec p-approve">
+            <h4>Cần tôi duyệt <span class="pill">1</span></h4>
+            <div class="p-row row-214"><i class="d blue"></i><span class="key">NOVA-214</span><span class="st">Ready for Review</span><span class="who">alex.kim</span></div>
+          </div>
+          <div class="p-sec">
+            <h4>Chờ release <span class="pill">0</span></h4>
+            <p class="p-empty">Không có gì chờ.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-window" aria-hidden="true">
+        <div class="bar">
+          <span class="dot-w r"></span><span class="dot-w y"></span><span class="dot-w g"></span>
+          <span class="urlbar">yourteam.atlassian.net/browse/NOVA-…</span>
+        </div>
+        <div class="reloadbar"></div>
+        <div class="bpage p-lines">
+          <div class="ln w1"></div><div class="ln w2"></div><div class="ln w3"></div><div class="ln w4"></div><div class="ln w2"></div>
+        </div>
+        <div class="bpage p-ticket">
+          <p class="crumb">Projects / NOVA board / NOVA-1999</p>
+          <div class="thead">
+            <h5>Payment retry flow drops silently</h5>
+            <div class="actions"><span class="ghost-btn">Watching · 3</span></div>
+          </div>
+          <div class="chips"><span class="chip type">Bug</span><span class="chip open">Open</span></div>
+          <div class="b-cols">
+            <div class="b-main">
+              <h6>Description</h6>
+              <p>When a retry hits a 5xx from the payment gateway, the job exits without re-queueing — orders sit at "pending" with no alert.</p>
+              <p>Expected: exponential backoff ×3, then surface a failure event to the ops channel.</p>
+              <h6>Activity</h6>
+              <div class="cmt">
+                <span class="av cp">CP</span>
+                <div class="cmt-body"><b>casey.park</b><span class="when">17 days ago</span>
+                  <p>Repro'd on staging with a forced gateway timeout — attaching logs. Happens on ~4% of retries.</p>
+                </div>
+              </div>
+            </div>
+            <div class="b-side">
+              <h6>Details</h6>
+              <div class="side-row"><span class="sl">Assignee</span><span class="sv">jordan.lee</span></div>
+              <div class="side-row"><span class="sl">Reporter</span><span class="sv">casey.park</span></div>
+              <div class="side-row"><span class="sl">Priority</span><span class="sv hi">High</span></div>
+              <div class="side-row"><span class="sl">Sprint</span><span class="sv">Sprint 24 Jul</span></div>
+              <div class="side-row"><span class="sl">Story points</span><span class="sv">5</span></div>
+              <div class="side-row"><span class="sl">Labels</span><span class="sv">payments</span></div>
+              <div class="side-row"><span class="sl">Updated</span><span class="sv hi">17 days ago</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="bpage p-review">
+          <p class="crumb">Projects / NOVA board / NOVA-214</p>
+          <div class="thead">
+            <h5>Sprint report export</h5>
+            <div class="actions">
+              <span class="ghost-btn">Request changes</span>
+              <span class="approve-btn"><span class="t-ap">Approve</span><span class="t-ok">Approved ✓</span></span>
+            </div>
+          </div>
+          <div class="chips"><span class="chip type">Story</span><span class="chip review">Ready for Review</span></div>
+          <div class="b-cols">
+            <div class="b-main">
+              <h6>Description</h6>
+              <p>Adds CSV and PDF export to the sprint report. Columns follow the board settings; the totals row uses the same done/total math as the panel.</p>
+              <h6>Review checklist</h6>
+              <ul class="checks-mini">
+                <li>Unit tests green — 128 passed</li>
+                <li>QA sign-off on build 1.4.2 — sam.rivera</li>
+                <li>Docs updated — export formats</li>
+              </ul>
+              <h6>Activity</h6>
+              <div class="cmt">
+                <span class="av sr">SR</span>
+                <div class="cmt-body"><b>sam.rivera</b><span class="when">2 hours ago</span>
+                  <p>Tested export on three boards — totals match the panel everywhere. Over to you for approval.</p>
+                </div>
+              </div>
+            </div>
+            <div class="b-side">
+              <h6>Details</h6>
+              <div class="side-row"><span class="sl">Assignee</span><span class="sv">alex.kim</span></div>
+              <div class="side-row"><span class="sl">Reporter</span><span class="sv">casey.park</span></div>
+              <div class="side-row"><span class="sl">Priority</span><span class="sv">Medium</span></div>
+              <div class="side-row"><span class="sl">Sprint</span><span class="sv">Sprint 24 Jul</span></div>
+              <div class="side-row"><span class="sl">Story points</span><span class="sv">3</span></div>
+              <div class="side-row"><span class="sl">Approver</span><span class="sv you">you</span></div>
+              <div class="side-row"><span class="sl">Updated</span><span class="sv">2 hours ago</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cursor" aria-hidden="true"><svg viewBox="0 0 10 14" fill="#ffffff" stroke="#1b1b1b" stroke-width="0.8"><path d="M1 1 L9 8 L5.5 8.6 L7.4 12.6 L5.6 13.4 L3.8 9.4 L1 11.6 Z"></path></svg></div>
+      <div class="ripple rip-1"></div>
+      <div class="ripple rip-2"></div>
+      <div class="ripple rip-3"></div>
+
+      <div class="toast" aria-hidden="true">
+        <img src="/assets/icon-64.png" alt="" width="30" height="30">
+        <div class="toast-text">
+          <b>Widget for Jira</b>
+          <span><code>NOVA-214</code> Review → Done · alex.kim</span>
+        </div>
+      </div>
+      <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <p class="mock-caption"><code>demo</code>Thấy ticket đứng im, bấm — nó mở trong trình duyệt. Kéo xuống hàng chờ duyệt, bấm tiếp, Approve trên Jira web. Panel vẫn chỉ-đọc: mọi thao tác diễn ra trên chính Jira.</p>
+  </div>
+
+  <section id="features" class="alt">
+    <div class="wrap">
+      <p class="eyebrow">tính năng</p>
+      <h2>Sinh ra cho team lead. Đắc dụng trong standup.</h2>
+      <p class="sub">Mọi thứ bạn liếc mười lần một ngày, không cần mở tab trình duyệt.</p>
+      <div class="feat-grid">
+        <div class="feat">
+          <p class="tag"><i class="dot accent"></i>done/total</p>
+          <h3>Tiến độ sprint</h3>
+          <p>Done/tổng và story point luôn kèm mẫu số — "chờ release" tách riêng khỏi done thật, để con số 37/46 không bao giờ đánh lừa bạn.</p>
+        </div>
+        <div class="feat">
+          <p class="tag"><i class="dot warn"></i>stale &gt; 3d</p>
+          <h3>Cảnh báo rủi ro</h3>
+          <p>Ticket đứng im nhiều ngày không ai động, ticket khó kịp trước khi sprint đóng, và ticket sống quá lâu cần được ngó tới.</p>
+        </div>
+        <div class="feat">
+          <p class="tag"><i class="dot"></i>waiting-on: you</p>
+          <h3>Hàng đợi bàn giao</h3>
+          <p>Chờ test, chờ chính bạn duyệt, chờ release — lọc theo vai trò, nên hàng đợi cần bạn không bao giờ rỗng oan.</p>
+        </div>
+        <div class="feat">
+          <p class="tag"><i class="dot"></i>per-member</p>
+          <h3>Tải của team</h3>
+          <p>Thanh tiến độ từng thành viên và donut phân bổ cả sprint — kể cả người đã xong hết việc và "biến mất" khỏi các tool khác.</p>
+        </div>
+        <div class="feat">
+          <p class="tag"><i class="dot"></i>grouped ×3</p>
+          <h3>Thông báo native</h3>
+          <p>Đổi status, đổi người làm, ticket vào/ra giữa sprint. Nhiều thay đổi cùng lúc gom thành một thông báo thay vì mười tiếng ping.</p>
+        </div>
+        <div class="feat">
+          <p class="tag"><i class="dot"></i>team ⇄ me</p>
+          <h3>Một panel, hai góc nhìn</h3>
+          <p>Chuyển "cả team" ↔ "chỉ việc của tôi" ngay từ menu bar. Tầng desktop nằm dưới mọi cửa sổ; chế độ nổi luôn trên cùng.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="transparency">
+    <div class="wrap">
+      <p class="eyebrow">minh bạch</p>
+      <h2>Riêng tư từ thiết kế. Không có gì phải giấu.</h2>
+      <p class="sub">Chúng tôi làm cái panel mà chính mình dám giao credentials Jira của công ty — và đây là chính xác những gì nó làm, viết theo kiểu một auditor sẽ viết.</p>
+      <dl class="ledger">
+        <div><dt>network.destinations</dt><dd>dữ liệu sprint chỉ chạy giữa máy bạn và host Jira bạn cấu hình — không bao giờ tới chúng tôi.</dd></div>
+        <div><dt>write.access</dt><dd>không — chỉ-đọc từ cấu trúc code; app không bao giờ thay đổi gì trên Jira.</dd></div>
+        <div><dt>credential.storage</dt><dd>macOS Keychain, trên máy bạn; chỉ gửi tới đúng host Jira bạn cấu hình.</dd></div>
+        <div><dt>telemetry</dt><dd>không — zero analytics, zero crash reporter, zero SDK bên thứ ba. Nhãn: "Data Not Collected".</dd></div>
+        <div><dt>local.data</dt><dd>file thường bạn mở xem và xóa được — config và log, không giấu gì.</dd></div>
+        <div><dt>affiliation</dt><dd>sản phẩm độc lập — không liên kết, không được Atlassian bảo trợ.</dd></div>
+      </dl>
+      <p class="selfnote">// trang này cũng làm đúng điều nó nói: zero request bên thứ ba — không font ngoài, không tracker.</p>
+    </div>
+  </section>
+
+  <section id="pricing" class="alt">
+    <div class="wrap">
+      <p class="eyebrow">giá &amp; yêu cầu</p>
+      <h2>Một ly cà phê. Không subscription.</h2>
+      <div class="pricing">
+        <div class="amount">$1.99<small>một lần</small></div>
+        <ul>
+          <li>Đủ mọi tính năng — không khóa gì thêm</li>
+          <li>Update miễn phí</li>
+          <li>Hoàn tiền qua Apple</li>
+        </ul>
+        <a class="btn primary" aria-disabled="true" title="Link sẽ hoạt động khi app lên App Store">Mac App Store — sắp có</a>
+      </div>
+      <ul class="req">
+        <li>Hoạt động với <b>Jira Server / Data Center 8.14+</b> (Personal Access Token) và <b>Jira Cloud</b> (email + API token)</li>
+        <li>macOS 11 trở lên, Apple Silicon</li>
+        <li>Giao diện tiếng Việt và tiếng Anh — theo ngôn ngữ hệ thống</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <div>© 2026 ISEMI COMPANY LIMITED</div>
+      <nav aria-label="Chân trang">
+        <a href="/privacy/">Chính sách quyền riêng tư</a>
+        <a href="/terms/">Điều khoản sử dụng</a>
+        <a href="mailto:aabooksapp@gmail.com">Hỗ trợ</a>
+        <a href="https://github.com/crisng95/jira-widget/issues">Issues</a>
+      </nav>
+    </div>
+    <p class="legalnote">Jira là nhãn hiệu đã đăng ký của Atlassian Pty Ltd. Widget for Jira là sản phẩm độc lập, không liên kết, không được bảo trợ hay chứng thực bởi Atlassian.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -23,7 +23,7 @@ PRIVATE BY DESIGN
 • Talks only to the Jira server you configure — no analytics, no tracking, no third-party servers
 
 REQUIREMENTS
-• Jira Server or Data Center 8.14 or later (Personal Access Tokens). Jira Cloud is not supported yet.
+• Works with Jira Server / Data Center 8.14+ (Personal Access Token) and Jira Cloud (email + API token).
 • A Jira account with permission to view the board you follow.
 • English and Vietnamese interface.
 
