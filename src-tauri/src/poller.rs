@@ -33,6 +33,8 @@ pub struct PanelState {
     pub poll_interval_secs: u64,
     /// UI can de ghi nhan "Dung im > N ngay" thay vi hardcode con so
     pub stale_days: i64,
+    /// "vi" | "en" — de panel chon dung bo chuoi ngay tu lan render dau
+    pub language: String,
 }
 
 pub struct AppState {
@@ -55,6 +57,8 @@ pub struct Inner {
     /// Mode dang ap dung. Song o day chu khong o `cfg` vi `cfg` bat bien sau
     /// khi khoi dong, con cai nay doi nong duoc.
     pub display_mode: DisplayMode,
+    /// Ngon ngu dang ap dung — cung ly do voi `display_mode`: doi nong duoc.
+    pub language: String,
     // --- Cache cua lan fetch gan nhat, chi de dung lai snapshot khi doi mode.
     // Doi mode ma phai cho toi 60 giay cho lan poll sau thi tinh nang vo dung,
     // nen giu nguyen lieu tho lai (AC-D2). 48 issue ~ 60KB, khong dang ke.
@@ -63,9 +67,10 @@ pub struct Inner {
 }
 
 impl Inner {
-    pub fn new(display_mode: DisplayMode) -> Self {
+    pub fn new(display_mode: DisplayMode, language: String) -> Self {
         Self {
             display_mode,
+            language,
             ..Default::default()
         }
     }
@@ -84,6 +89,7 @@ impl AppState {
             no_active_sprint: g.no_active_sprint,
             poll_interval_secs: self.cfg.poll_interval_secs,
             stale_days: self.cfg.stale_days,
+            language: g.language.clone(),
         }
     }
 }

@@ -1,0 +1,14 @@
+name = "masterjira-oauth-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+# ---------------------------------------------------------------------------
+# Secrets — set these with wrangler, never commit them:
+#   npx wrangler secret put CLIENT_ID
+#   npx wrangler secret put CLIENT_SECRET
+#
+# Optional: pin the redirect URI as a plain (non-secret) var. When set, the
+# /oauth/token endpoint requires any client-supplied redirect_uri to match it.
+#   [vars]
+#   REDIRECT_URI = "https://<worker-domain>/oauth/callback"
+# ---------------------------------------------------------------------------

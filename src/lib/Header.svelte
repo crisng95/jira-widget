@@ -1,7 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import type { PanelState } from "../types";
-  import { fmtCountdown, fmtClock } from "../types";
+  import { t, fmtCountdown, fmtClock } from "../i18n.svelte";
 
   // Prop ten `panel` chu khong phai `state`: dat ten `state` se lam Svelte 5
   // hieu `$state` la store subscription thay vi rune.
@@ -49,6 +49,14 @@
     await invoke("set_compact", { compact });
   }
 
+  async function hide() {
+    try {
+      await invoke("hide_panel");
+    } catch (e) {
+      console.error("hide_panel loi", e);
+    }
+  }
+
   // Chip chi hien khi dang o Only Me, va bam vao la ve Team.
   //
   // Ly do phai luon hien: doi mode xong roi quen la moi nguon hieu nham nang
@@ -71,7 +79,7 @@
     <span class="title" data-tauri-drag-region>
       {panel.snapshot?.sprintName ?? "PROJ"}
     </span>
-    <span class="cd" class:critical={urgency === "critical"} class:warning={urgency === "warning"}>
+    <span class="cd num" class:critical={urgency === "critical"} class:warning={urgency === "warning"}>
       {#if urgency !== "none"}<span
           class="dot"
           class:dot-critical={urgency === "critical"}
@@ -81,43 +89,41 @@
     </span>
   </div>
 
-  <div class="line2" data-tauri-drag-region>
-    <span class="stamp">
-      {#if !panel.ok}
-        <span class="dot dot-critical"></span>
-        <span class="crit-text">
-          {panel.errorKind === "auth" ? "Token het han" : "Du lieu luc"}
-          {panel.errorKind === "auth" ? "" : fmtClock(panel.lastSuccess)}
-        </span>
-      {:else if panel.noActiveSprint}
-        <span class="dot dot-neutral"></span> Chua co sprint dang chay
-      {:else}
-        <span class="dot dot-good"></span> cap nhat {fmtClock(panel.lastSuccess)}
-      {/if}
-    </span>
+  {#if !compact}
+    <div class="line2" data-tauri-drag-region>
+      <span class="stamp">
+        {#if !panel.ok}
+          <span class="dot dot-critical"></span>
+          <span class="crit-text">
+            {panel.errorKind === "auth"
+              ? t("tokenExpired")
+              : t("dataFrom", { t: fmtClock(panel.lastSuccess) })}
+          </span>
+        {:else if panel.noActiveSprint}
+          <span class="dot dot-neutral"></span> {t("noSprint")}
+        {:else}
+          <span class="dot dot-good"></span> {t("updatedAt", { t: fmtClock(panel.lastSuccess) })}
+        {/if}
+      </span>
 
-    <span class="actions">
-      {#if onlyMe}
-        <button
-          class="modechip"
-          onclick={veTeam}
-          title="Đang lọc theo bạn — bấm để xem lại cả team"
-        >
-          <span class="dot dot-mine"></span>
-          {viewer?.short ?? "tôi"} · chỉ việc của tôi
-        </button>
-      {/if}
-      <button onclick={refresh} title="Refresh ngay" class:spin={busy}>&#8635;</button>
-      <button onclick={toggleCompact} title={compact ? "Mo rong" : "Thu gon"}>
-        {compact ? "▾" : "▴"}
-      </button>
-    </span>
-  </div>
+      <span class="actions">
+        {#if onlyMe}
+          <button class="modechip" onclick={veTeam} title={t("onlyMeChipTitle")}>
+            <span class="dot dot-mine"></span>
+            {t("onlyMeChip", { name: viewer?.short || t("meFallback") })}
+          </button>
+        {/if}
+        <button class="ico" onclick={refresh} title={t("refreshTitle")} class:spin={busy}>&#8635;</button>
+        <button class="ico" onclick={toggleCompact} title={t("collapseTitle")}>▴</button>
+        <button class="ico" onclick={hide} title={t("hideTitle")}>⤓</button>
+      </span>
+    </div>
+  {/if}
 </header>
 
 <style>
   header {
-    padding: 9px 12px 8px;
+    padding: var(--pad-y) var(--pad-x) 9px;
     flex: none;
     cursor: default;
   }
@@ -126,12 +132,13 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--sp-lg);
   }
 
   .title {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 640;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -141,12 +148,11 @@
   .cd {
     flex: none;
     font-size: 12px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
+    font-weight: 640;
     color: var(--text-secondary);
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
   }
   .cd.warning,
   .cd.critical {
@@ -157,14 +163,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 2px;
-    font-size: 10px;
+    margin-top: 3px;
+    font-size: 10.5px;
     color: var(--text-muted);
   }
 
   /* Panel rong co dinh 360px. Chip mode la `nowrap`, nen khi ten dai + dau thoi
-     gian + hai nut icon cong lai se day nhau tran ra ngoai. Cho dau thoi gian
-     co lai truoc, vi no la thu it quan trong nhat trong ba. */
+     gian + cac nut icon cong lai se day nhau tran ra ngoai. Cho dau thoi gian
+     co lai truoc, vi no la thu it quan trong nhat. */
   .stamp {
     display: inline-flex;
     align-items: center;
@@ -178,66 +184,51 @@
     color: var(--text-secondary);
   }
 
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex: none;
-  }
-  .dot-good {
-    background: var(--status-good);
-  }
-  .dot-warning {
-    background: var(--status-warning);
-  }
-  .dot-critical {
-    background: var(--status-critical);
-  }
-  .dot-neutral {
-    background: var(--baseline);
+  .dot-mine {
+    background: var(--series-1);
   }
 
   .actions {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
   }
-  .actions button {
-    width: 20px;
-    height: 18px;
-    border-radius: 4px;
+  .actions .ico {
+    width: 21px;
+    height: 19px;
+    display: grid;
+    place-items: center;
+    border-radius: 5px;
     color: var(--text-muted);
     font-size: 12px;
     cursor: pointer;
+  }
+  .actions .ico:hover {
+    background: var(--raised);
+    color: var(--text-primary);
   }
 
   /* Chip nay khong phai nut bam thong thuong: no la nhan trang thai "man hinh
      dang bi loc". Vi the no rong ra theo chu va dam hon cac nut icon ben canh. */
   .actions .modechip {
-    width: auto;
-    height: 18px;
-    padding: 0 7px;
-    margin-right: 4px;
+    height: 19px;
+    padding: 0 8px;
+    margin-right: 3px;
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    border-radius: var(--r-full);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 640;
     white-space: nowrap;
     color: var(--text-secondary);
     background: var(--raised);
+    cursor: pointer;
   }
   .actions .modechip:hover {
     color: var(--text-primary);
   }
-  .dot-mine {
-    background: var(--series-1);
-  }
-  .actions button:hover {
-    background: var(--raised);
-    color: var(--text-primary);
-  }
-  .actions button.spin {
+  .actions .ico.spin {
     animation: spin 0.9s linear infinite;
   }
   @keyframes spin {

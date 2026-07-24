@@ -6,6 +6,7 @@
   import { listen } from "@tauri-apps/api/event";
   import type { PanelState } from "./types";
   import { colorMap } from "./types";
+  import { t, setLang } from "./i18n.svelte";
 
   import Header from "./lib/Header.svelte";
   import RiskAlerts from "./lib/RiskAlerts.svelte";
@@ -18,6 +19,7 @@
   let panel = $state<PanelState | null>(null);
   let compact = $state(false);
   let showAll = $state(false);
+  let moving = $state(false);
 
   let snap = $derived(panel?.snapshot ?? null);
   let colors = $derived(
@@ -40,13 +42,51 @@
     }
   }
 
+  async function moCaiDat() {
+    try {
+      await invoke("settings_open");
+    } catch (e) {
+      console.error("settings_open loi", e);
+    }
+  }
+
+  async function expand() {
+    compact = false;
+    await invoke("set_compact", { compact: false });
+  }
+
+  // Che do di chuyen: panel tam noi len tren de nhan chuot; keo tu do bang
+  // vung drag cua banner; bam Xong la tra ve dung tang da cau hinh.
+  async function batDiChuyen() {
+    if (moving) return;
+    moving = true;
+    try {
+      await invoke("set_move_mode", { moving: true });
+    } catch (e) {
+      console.error("set_move_mode loi", e);
+    }
+  }
+
+  async function xongDiChuyen() {
+    moving = false;
+    try {
+      await invoke("set_move_mode", { moving: false });
+    } catch (e) {
+      console.error("set_move_mode loi", e);
+    }
+  }
+
   onMount(() => {
     invoke<PanelState>("get_state")
-      .then((s) => (panel = s))
+      .then((s) => {
+        panel = s;
+        setLang(s.language);
+      })
       .catch((e) => console.error("get_state loi", e));
 
     const un = listen<PanelState>("panel://state", (ev) => {
       panel = ev.payload;
+      setLang(ev.payload.language);
     });
 
     // Tray bam "Thu gon / mo rong" -> lat o day de trang thai chi co MOT nguon
@@ -57,49 +97,62 @@
       );
     });
 
+    const unLang = listen<string>("panel://language", (ev) => {
+      setLang(ev.payload);
+    });
+
+    const unMove = listen("panel://move-mode", () => {
+      void batDiChuyen();
+    });
+
     return () => {
       un.then((f) => f());
       unCompact.then((f) => f());
+      unLang.then((f) => f());
+      unMove.then((f) => f());
     };
   });
 </script>
 
-<div class="panel">
+<div class="panel" class:moving>
+  {#if moving}
+    <div class="move-banner" data-tauri-drag-region>
+      <span class="grip" data-tauri-drag-region>✥</span>
+      <span class="mt" data-tauri-drag-region>{t("moveHint")}</span>
+      <button class="done2" onclick={xongDiChuyen}>{t("done")}</button>
+    </div>
+  {/if}
+
   {#if panel === null}
-    <div class="boot">Dang tai...</div>
+    <div class="boot">{t("loading")}</div>
   {:else}
     <Header {panel} bind:compact />
 
     {#if !compact}
       <div class="scroll">
         {#if panel.errorKind === "auth"}
-          <!-- Loi auth khong duoc im lang: panel trang thi anh tuong sprint rong -->
+          <!-- Loi auth khong duoc im lang: panel trang thi anh tuong sprint rong.
+               "Token het han" phai co loi ra ngay tai cho: nut mo Cai dat. -->
           <div class="section notice">
-            <p class="ntitle"><span class="dot dot-critical"></span> Token het han</p>
+            <p class="ntitle"><span class="dot dot-critical"></span> {t("tokenExpired")}</p>
             <p class="nbody">{panel.errorMessage}</p>
-            <p class="nbody muted">
-              Cap lai PAT trong Jira roi chay:<br />
-              <code>jira-widget --set-token</code>
-            </p>
+            <p class="nbody muted">{t("tokenExpiredHint")}</p>
+            <button class="back" onclick={moCaiDat}>{t("openSettings")}</button>
           </div>
         {:else if !panel.ok && !snap}
           <div class="section notice">
             <p class="ntitle">
-              <span class="dot dot-critical"></span> Khong ket noi duoc Jira
+              <span class="dot dot-critical"></span> {t("cantReachJira")}
             </p>
             <p class="nbody">{panel.errorMessage}</p>
-            <p class="nbody muted num">
-              Da thu {panel.consecutiveFailures} lan. Kiem tra VPN / mang.
-            </p>
+            <p class="nbody muted num">{t("triedTimes", { n: panel.consecutiveFailures })}</p>
           </div>
         {:else if panel.noActiveSprint}
           <div class="section notice">
             <p class="ntitle">
-              <span class="dot dot-neutral"></span> Chua co sprint dang chay
+              <span class="dot dot-neutral"></span> {t("noSprint")}
             </p>
-            <p class="nbody muted">
-              Board dang o giua hai sprint. Panel se tu bat lai khi sprint moi mo.
-            </p>
+            <p class="nbody muted">{t("noSprintBody")}</p>
           </div>
         {/if}
 
@@ -108,28 +161,27 @@
             <!-- Van hien du lieu cu, chi ghi ro no la du lieu cu -->
             <div class="stalebar">
               <span class="dot dot-warning"></span>
-              Du lieu cu — dang thu ket noi lai ({panel.consecutiveFailures} lan hong)
+              {t("staleBar", { n: panel.consecutiveFailures })}
             </div>
           {/if}
 
-          <RiskAlerts
-            risks={snap.risks}
-            staleDaysLabel="{panel.staleDays} ngay"
-            {colors}
-          />
+          <RiskAlerts risks={snap.risks} staleDays={panel.staleDays} {colors} />
           {#if khongCoViec}
             <!-- Man hinh rong PHAI tu giai thich. Bat Only Me roi thay panel
                  trang la luc nguoi dung tuong app hong, trong khi su that chi
                  la sprint nay chua giao viec cho ho. -->
             <div class="section notice">
               <p class="ntitle">
-                <span class="dot dot-neutral"></span> Bạn không có ticket nào trong sprint này
+                <span class="dot dot-neutral"></span> {t("noTicketsMine")}
               </p>
               <p class="nbody muted num">
-                Cả sprint đang {snap.sprintContext.done}/{snap.sprintContext.total} ·
-                {snap.sprintContext.percent}%.
+                {t("sprintOverall", {
+                  d: snap.sprintContext.done,
+                  t: snap.sprintContext.total,
+                  p: snap.sprintContext.percent,
+                })}
               </p>
-              <button class="backbtn" onclick={veTeam}>Xem cả team</button>
+              <button class="back" onclick={veTeam}>{t("viewTeam")}</button>
             </div>
           {:else}
             <SprintProgress
@@ -148,18 +200,18 @@
           {/if}
           <QueueSection
             queue={snap.testQueue}
-            titleMine="Cần tôi test"
-            titleAll="Đang chờ test"
-            emptyMine="Không có ticket nào chờ bạn test."
-            emptyAll="Không có ticket nào đang chờ test."
+            titleMine={t("qTestMine")}
+            titleAll={t("qTestAll")}
+            emptyMine={t("qTestEmptyMine")}
+            emptyAll={t("qTestEmptyAll")}
             {colors}
           />
           <QueueSection
             queue={snap.reviewQueue}
-            titleMine="Cần tôi duyệt"
-            titleAll="Đang chờ duyệt"
-            emptyMine="Không có ticket nào chờ bạn duyệt."
-            emptyAll="Không có ticket nào đang chờ duyệt."
+            titleMine={t("qReviewMine")}
+            titleAll={t("qReviewAll")}
+            emptyMine={t("qReviewEmptyMine")}
+            emptyAll={t("qReviewEmptyAll")}
             {colors}
           />
           <!-- Chờ release không lọc theo người ở BẤT KỲ mode nào. Ở Only Me mọi
@@ -167,12 +219,10 @@
                bị đọc thành "của tôi" — phải tự nói ra là cả team. -->
           <QueueSection
             queue={snap.releaseQueue}
-            titleMine="Chờ release"
-            titleAll={onlyMe ? "Chờ release · cả team" : "Chờ release"}
-            emptyMine="Không có ticket nào chờ release."
-            emptyAll={onlyMe
-              ? "Cả team không có ticket nào chờ release."
-              : "Không có ticket nào chờ release."}
+            titleMine={t("qRelease")}
+            titleAll={onlyMe ? t("qReleaseTeam") : t("qRelease")}
+            emptyMine={t("qReleaseEmpty")}
+            emptyAll={onlyMe ? t("qReleaseEmptyTeam") : t("qReleaseEmpty")}
             {colors}
           />
 
@@ -181,23 +231,25 @@
               <div class="section-head">
                 <button class="alltoggle" onclick={() => (showAll = !showAll)}>
                   <span class="section-title">
-                    {onlyMe ? "Việc của tôi" : "Tất cả"} ({snap.openIssues.length} chưa xong)
+                    {onlyMe ? t("myTickets") : t("allTickets")}
                   </span>
                   <span class="caret">{showAll ? "▾" : "▸"}</span>
                 </button>
-                <span class="count-pill num" title="tuoi trung vi / lon nhat">
-                  p50 {snap.ageStats.medianAge}d · max {snap.ageStats.maxAge}d
+                <span class="count-pill num" title={t("ageStatsTitle")}>
+                  {t("nOpen", { n: snap.openIssues.length })}
                 </span>
               </div>
               {#if xongHetViec}
                 <!-- Khong gap sau caret: xong het viec la tin tot, dang duoc
                      noi thang chu khong bat nguoi ta bam ra moi thay. -->
-                <p class="doneall">Bạn đã xong hết việc trong sprint ✓</p>
+                <p class="doneall">{t("allDoneMine")}</p>
               {:else if showAll}
+                <p class="agestat num muted">
+                  {t("ageStats", { p: snap.ageStats.medianAge, m: snap.ageStats.maxAge })}
+                </p>
                 {#each snap.openIssues as issue (issue.key)}
                   <TicketRow
                     {issue}
-                    showStatus={true}
                     showAge={true}
                     color={issue.assignee ? colors.get(issue.assignee) : null}
                   />
@@ -208,7 +260,7 @@
         {/if}
       </div>
     {:else if snap}
-      <!-- Compact: chi giu tien do + so canh bao -->
+      <!-- Thu gon: chi tien do + so canh bao + nut mo rong -->
       <div class="cstrip">
         <span class="cnum num">{snap.progress.done}/{snap.progress.total}</span>
         <span class="ctrack">
@@ -218,6 +270,7 @@
           {#if snap.risks.count > 0}<span class="dot dot-critical"></span>{/if}
           {snap.risks.count}
         </span>
+        <button class="cexpand" onclick={expand} title={t("expandTitle")}>▾</button>
       </div>
     {/if}
   {/if}
@@ -232,30 +285,44 @@
     font-size: 11px;
   }
 
+  /* --- trang thai rong / loi: khong bao gio man trang, luon co loi ra --- */
+  .notice {
+    padding: 12px var(--pad-x);
+  }
   .notice .ntitle {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin: 0 0 4px;
-    font-size: 11px;
+    gap: 7px;
+    margin: 0 0 5px;
+    font-size: 11.5px;
     font-weight: 600;
   }
   .notice .nbody {
     margin: 0 0 3px;
-    font-size: 10px;
+    font-size: 10.5px;
     color: var(--text-secondary);
     word-break: break-word;
   }
-  code {
-    font-size: 9.5px;
+  .back {
+    margin-top: 9px;
+    padding: 4px 11px;
+    border-radius: var(--r-md);
+    background: var(--raised);
+    color: var(--text-primary);
+    font-size: 10.5px;
+    font-weight: 640;
+    cursor: pointer;
+  }
+  .back:hover {
+    background: var(--border);
   }
 
   .stalebar {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    font-size: 10px;
+    gap: var(--sp-md);
+    padding: 5px var(--pad-x);
+    font-size: 10.5px;
     color: var(--text-secondary);
     background: var(--raised);
   }
@@ -266,53 +333,45 @@
     gap: 5px;
     cursor: pointer;
   }
-
-  .doneall {
-    margin: 2px 0 0;
-    font-size: 10px;
-    color: var(--status-good);
-  }
-
-  .backbtn {
-    margin-top: 6px;
-    padding: 3px 9px;
-    border-radius: 5px;
-    background: var(--raised);
-    color: var(--text-primary);
-    font-size: 10px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .backbtn:hover {
-    background: var(--border);
-  }
   .caret {
     color: var(--text-muted);
     font-size: 9px;
   }
 
+  .agestat {
+    margin: -4px 0 5px;
+    font-size: 9.5px;
+  }
+
+  .doneall {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: var(--status-good);
+  }
+
+  /* --- thu gon --- */
   .cstrip {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 12px 10px;
+    gap: 9px;
+    padding: 0 var(--pad-x) 9px;
   }
   .cnum {
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 640;
   }
   .ctrack {
     flex: 1;
     height: 8px;
     background: var(--raised);
-    border-radius: 4px;
+    border-radius: var(--r-sm);
     overflow: hidden;
   }
   .cfill {
     display: block;
     height: 100%;
     background: var(--stage-closed);
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
   }
   .cwarn {
     display: inline-flex;
@@ -323,22 +382,58 @@
   }
   .cwarn.hot {
     color: var(--text-primary);
-    font-weight: 600;
+    font-weight: 640;
+  }
+  .cexpand {
+    width: 21px;
+    height: 19px;
+    display: grid;
+    place-items: center;
+    border-radius: 5px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .cexpand:hover {
+    background: var(--raised);
+    color: var(--text-primary);
   }
 
-  .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex: none;
+  /* --- che do di chuyen --- */
+  .panel.moving {
+    outline: 2px solid var(--series-1);
+    outline-offset: -2px;
   }
-  .dot-critical {
-    background: var(--status-critical);
+  .move-banner {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    background: var(--surface);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    text-align: center;
   }
-  .dot-warning {
-    background: var(--status-warning);
+  .move-banner .grip {
+    font-size: 22px;
   }
-  .dot-neutral {
-    background: var(--baseline);
+  .move-banner .mt {
+    font-size: 12px;
+    font-weight: 640;
+    color: var(--text-primary);
+    max-width: 220px;
+  }
+  .move-banner .done2 {
+    font-size: 11px;
+    font-weight: 640;
+    padding: 5px 15px;
+    border-radius: 7px;
+    background: var(--series-1);
+    color: #fff;
+    cursor: pointer;
   }
 </style>

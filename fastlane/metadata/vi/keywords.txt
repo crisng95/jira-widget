@@ -1,0 +1,1 @@
+scrum,agile,kanban,nhóm,bảng công việc,tiến độ,quản lý dự án,standup,backlog

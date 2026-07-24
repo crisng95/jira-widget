@@ -123,8 +123,8 @@ pub struct RawFields {
     pub qcs: Option<serde_json::Value>,
 }
 
-/// Rut username tu mot field kieu mang, chiu duoc ca `["ten"]` lan
-/// `[{"name": "ten", ...}]`.
+/// Rut dinh danh nguoi tu mot field kieu mang, chiu duoc ca `["ten"]`,
+/// `[{"name": "ten", ...}]` (DC) lan `[{"accountId": "...", ...}]` (Cloud).
 pub fn usernames_from(v: &Option<serde_json::Value>) -> Vec<String> {
     let Some(serde_json::Value::Array(arr)) = v else {
         return Vec::new();
@@ -132,9 +132,11 @@ pub fn usernames_from(v: &Option<serde_json::Value>) -> Vec<String> {
     arr.iter()
         .filter_map(|x| match x {
             serde_json::Value::String(s) => Some(s.clone()),
-            serde_json::Value::Object(o) => {
-                o.get("name").and_then(|n| n.as_str()).map(String::from)
-            }
+            serde_json::Value::Object(o) => o
+                .get("name")
+                .or_else(|| o.get("accountId"))
+                .and_then(|n| n.as_str())
+                .map(String::from),
             _ => None,
         })
         .collect()
@@ -184,8 +186,23 @@ pub struct RawUser {
     /// Server/DC dung `name`; giu Option phong khi instance tra thieu.
     #[serde(default)]
     pub name: Option<String>,
+    /// Jira Cloud (GDPR) KHONG co `name` — dinh danh la `accountId`.
+    #[serde(rename = "accountId", default)]
+    pub account_id: Option<String>,
     #[serde(rename = "displayName", default)]
     pub display_name: Option<String>,
+}
+
+impl RawUser {
+    /// Khoa dinh danh hieu dung: `name` (DC) truoc, `accountId` (Cloud) sau.
+    /// Moi phep so khop nguoi (assignee, `me`, mau sac) deu phai di qua day —
+    /// tren Cloud ma doc `name` truc tiep thi 100% ticket thanh "chua giao".
+    pub fn username(&self) -> Option<String> {
+        self.name
+            .clone()
+            .filter(|s| !s.is_empty())
+            .or_else(|| self.account_id.clone().filter(|s| !s.is_empty()))
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -200,6 +217,23 @@ pub struct SprintMeta {
     pub board_id: u64,
     pub start: Option<DateTime<Utc>>,
     pub end: Option<DateTime<Utc>>,
+}
+
+/// Hai URL cung goc (scheme + host + port)?
+///
+/// Dung lam hang rao chong confused-deputy o hai cho: (1) token DA LUU chi
+/// duoc gan vao request toi dung host da luu trong config, (2) `open_issue`
+/// chi mo link tro ve dung Jira instance. So sanh chuoi kieu `starts_with`
+/// khong du: `https://jira.example.com.evil.com` va
+/// `https://jira.example.com@evil.com` deu qua mat prefix check.
+pub fn same_origin(a: &str, b: &str) -> bool {
+    let (Ok(ua), Ok(ub)) = (reqwest::Url::parse(a), reqwest::Url::parse(b)) else {
+        return false;
+    };
+    ua.scheme() == ub.scheme()
+        && ua.host_str().is_some()
+        && ua.host_str() == ub.host_str()
+        && ua.port_or_known_default() == ub.port_or_known_default()
 }
 
 // ------------------------------------------------------------ date parsing
@@ -220,41 +254,79 @@ pub fn parse_jira_datetime(s: &str) -> Result<DateTime<Utc>, JiraError> {
 
 // ------------------------------------------------------------------ client
 
+/// Cach ky vao tung request. Ba duong khac nhau ve header LAN vong doi bi mat:
+/// PAT/API-token song lau va bat bien; access token cua OAuth ngan han va do
+/// `TokenStore` xoay — client phai hoi lai truoc moi request.
+pub enum JiraAuth {
+    /// Jira DC/Server PAT — `Authorization: Bearer`.
+    Pat(String),
+    /// Jira Cloud API token — `Authorization: Basic b64(email:token)`.
+    Basic { email: String, token: String },
+    /// Jira Cloud OAuth 3LO — Bearer access token lay tu TokenStore.
+    Oauth(std::sync::Arc<crate::oauth::TokenStore>),
+}
+
 pub struct JiraClient {
     http: reqwest::Client,
+    /// Base cho link mo browser (`/browse/KEY`) — luon la site URL.
     base: String,
-    token: String,
+    /// Base cho REST API. Voi OAuth la `api.atlassian.com/ex/jira/{cloud_id}`,
+    /// hai mode con lai trung voi `base`.
+    api: String,
+    auth: JiraAuth,
     sprint_cache: Mutex<Option<(SprintMeta, Instant)>>,
 }
 
 impl JiraClient {
-    pub fn new(base_url: &str, token: String) -> Result<Self> {
+    pub fn new(base_url: &str, api_base: Option<String>, auth: JiraAuth) -> Result<Self> {
         // Cert cua jira.example.com do GlobalSign cap va con han
         // -> GIU verification nghiem ngat, khong dung danger_accept_invalid_certs.
         let http = reqwest::Client::builder()
             .timeout(HTTP_TIMEOUT)
-            .user_agent("jira-widget/0.1")
+            .user_agent("master-jira/0.1")
             .build()?;
+        let base = base_url.trim_end_matches('/').to_string();
+        let api = api_base
+            .map(|s| s.trim_end_matches('/').to_string())
+            .unwrap_or_else(|| base.clone());
         Ok(Self {
             http,
-            base: base_url.trim_end_matches('/').to_string(),
-            token,
+            base,
+            api,
+            auth,
             sprint_cache: Mutex::new(None),
         })
     }
 
-    async fn get_json<T: for<'de> Deserialize<'de>>(&self, path: &str) -> Result<T, JiraError> {
-        let url = format!("{}{}", self.base, path);
-        log::debug!("GET {url}");
+    /// Tien loi cho DC PAT — giu cho CLI va test khoi dai dong.
+    pub fn new_pat(base_url: &str, token: String) -> Result<Self> {
+        Self::new(base_url, None, JiraAuth::Pat(token))
+    }
 
-        let resp = self
-            .http
-            .get(&url)
-            .bearer_auth(&self.token)
-            .header("Accept", "application/json")
-            .send()
-            .await
-            .map_err(|e| {
+    async fn get_json<T: for<'de> Deserialize<'de>>(&self, path: &str) -> Result<T, JiraError> {
+        // OAuth: access token co the vua het han giua hai lan poll. Gap 401 thi
+        // ep refresh dung MOT lan roi goi lai; van 401 nua nghia la refresh token
+        // cung chet -> tra Auth de panel hien state "token het han".
+        let mut da_refresh = false;
+        loop {
+            let url = format!("{}{}", self.api, path);
+            log::debug!("GET {url}");
+
+            // Access token da dung cho luot nay — de refresh-neu-stale biet
+            // "co ai refresh truoc minh chua" ma khong dot them luot xoay vong.
+            let mut used_access: Option<String> = None;
+            let mut req = self.http.get(&url).header("Accept", "application/json");
+            req = match &self.auth {
+                JiraAuth::Pat(t) => req.bearer_auth(t),
+                JiraAuth::Basic { email, token } => req.basic_auth(email, Some(token)),
+                JiraAuth::Oauth(store) => {
+                    let tok = store.access_token().await.map_err(JiraError::Auth)?;
+                    used_access = Some(tok.clone());
+                    req.bearer_auth(tok)
+                }
+            };
+
+            let resp = req.send().await.map_err(|e| {
                 if e.is_timeout() {
                     JiraError::Network(format!("timeout sau {}s", HTTP_TIMEOUT.as_secs()))
                 } else {
@@ -262,23 +334,37 @@ impl JiraClient {
                 }
             })?;
 
-        let status = resp.status();
-        if status == reqwest::StatusCode::UNAUTHORIZED
-            || status == reqwest::StatusCode::FORBIDDEN
-        {
-            return Err(JiraError::Auth(format!("HTTP {}", status.as_u16())));
-        }
-        if !status.is_success() {
-            let body = resp.text().await.unwrap_or_default();
-            return Err(JiraError::Api {
-                status: status.as_u16(),
-                body,
-            });
-        }
+            let status = resp.status();
+            if status == reqwest::StatusCode::UNAUTHORIZED
+                || status == reqwest::StatusCode::FORBIDDEN
+            {
+                if let JiraAuth::Oauth(store) = &self.auth {
+                    if !da_refresh && status == reqwest::StatusCode::UNAUTHORIZED {
+                        da_refresh = true;
+                        if store
+                            .force_refresh_if_stale(used_access.as_deref().unwrap_or(""))
+                            .await
+                            .is_ok()
+                        {
+                            continue;
+                        }
+                    }
+                }
+                return Err(JiraError::Auth(format!("HTTP {}", status.as_u16())));
+            }
+            if !status.is_success() {
+                let body = resp.text().await.unwrap_or_default();
+                return Err(JiraError::Api {
+                    status: status.as_u16(),
+                    body,
+                });
+            }
 
-        resp.json::<T>()
-            .await
-            .map_err(|e| JiraError::Parse(e.to_string()))
+            return resp
+                .json::<T>()
+                .await
+                .map_err(|e| JiraError::Parse(e.to_string()));
+        }
     }
 
     /// Ai dang cam token nay. Dung cho nut "Kiem tra ket noi": vua xac thuc PAT
@@ -455,6 +541,49 @@ mod tests {
         assert_eq!(issue.fields.status.category.key, "new");
         assert_eq!(issue.fields.story_point, Some(3.0));
         assert_eq!(issue.fields.assignee.unwrap().name.unwrap(), "gale.shaw");
+    }
+
+    #[test]
+    fn same_origin_chan_cac_kieu_gia_mao_host() {
+        assert!(same_origin(
+            "https://jira.example.com:8443/browse/PROJ-1",
+            "https://jira.example.com:8443"
+        ));
+        assert!(same_origin("https://a.com/x", "https://a.com:443/y"), "port mac dinh");
+        // Cac kieu qua mat duoc prefix check nhung KHONG duoc qua day:
+        assert!(!same_origin("https://jira.example.com.evil.com/x", "https://jira.example.com"));
+        assert!(!same_origin("https://jira.example.com@evil.com/x", "https://jira.example.com"));
+        assert!(!same_origin("http://jira.example.com/x", "https://jira.example.com"));
+        assert!(!same_origin("https://jira.example.com:9000/x", "https://jira.example.com:8443"));
+        assert!(!same_origin("khong-phai-url", "https://jira.example.com"));
+        assert!(!same_origin("https://evil.com", ""));
+    }
+
+    #[test]
+    fn user_cloud_khong_co_name_thi_dinh_danh_bang_account_id() {
+        // Jira Cloud (GDPR) bo han field `name` — assignee chi con accountId.
+        let raw = r#"{ "accountId": "712020:aa-bb-cc", "displayName": "Gale Shaw" }"#;
+        let u: RawUser = serde_json::from_str(raw).unwrap();
+        assert_eq!(u.name, None);
+        assert_eq!(u.username().unwrap(), "712020:aa-bb-cc");
+
+        // DC co ca hai thi `name` phai thang.
+        let raw_dc = r#"{ "name": "gale.shaw", "accountId": "x", "displayName": "Gale" }"#;
+        let dc: RawUser = serde_json::from_str(raw_dc).unwrap();
+        assert_eq!(dc.username().unwrap(), "gale.shaw");
+    }
+
+    #[test]
+    fn usernames_from_doc_duoc_ca_name_lan_account_id() {
+        let v = Some(serde_json::json!([
+            { "name": "sam.hale" },
+            { "accountId": "5b10ac8d82e05b22cc7d4ef5" },
+            "chuoi.tran"
+        ]));
+        assert_eq!(
+            usernames_from(&v),
+            vec!["sam.hale", "5b10ac8d82e05b22cc7d4ef5", "chuoi.tran"]
+        );
     }
 
     #[test]

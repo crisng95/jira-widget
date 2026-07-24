@@ -6,7 +6,8 @@
   // co nut chuyen. Mau bam theo NGUOI (sort alphabet) chu khong theo thu hang,
   // de loc bot member khong lam doi mau nhung nguoi con lai.
   import type { MemberLoad } from "../types";
-  import { OTHER_COLOR, shownMembers } from "../types";
+  import { OTHER_COLOR, memberLabel, shownMembers } from "../types";
+  import { t } from "../i18n.svelte";
 
   let {
     members,
@@ -18,8 +19,8 @@
 
   // So slot mau do `shownMembers`/`colorMap` trong types.ts quyet dinh — de o
   // mot cho duy nhat cho khoi lech nhau.
-  const SIZE = 108;
-  const STROKE = 14;
+  const SIZE = 96;
+  const STROKE = 13;
   const R = (SIZE - STROKE) / 2;
   const C = 2 * Math.PI * R;
   const GAP = 2; // khoang ho mau nen giua cac lat — khong dung vien de tach
@@ -36,7 +37,9 @@
     const shown = shownMembers(members);
     const head: Slice[] = shown.map((m) => ({
       name: m.name,
-      label: m.name,
+      // Nhan doc duoc: username (DC) / display name (Cloud) — khoa accountId
+      // tho khong bao gio duoc hien ra legend.
+      label: memberLabel(m),
       value: m.total,
       color: colors.get(m.name) ?? OTHER_COLOR,
     }));
@@ -45,7 +48,7 @@
     if (tail.length > 0) {
       head.push({
         name: "__other__",
-        label: `Khac (${tail.length} muc)`,
+        label: t("other", { n: tail.length }),
         value: tail.reduce((s, m) => s + m.total, 0),
         color: OTHER_COLOR,
       });
@@ -72,7 +75,7 @@
 
 <div class="section">
   <div class="section-head">
-    <span class="section-title">Phan bo</span>
+    <span class="section-title">{t("allocation")}</span>
     <div class="toggle">
       <button
         aria-pressed={mode === "donut"}
@@ -85,7 +88,7 @@
   </div>
 
   {#if total === 0}
-    <p class="empty">Chua co ticket nao dang mo.</p>
+    <p class="empty">{t("noOpenTickets")}</p>
   {:else if mode === "donut"}
     <div class="alloc">
       <svg
@@ -93,13 +96,13 @@
         height={SIZE}
         viewBox="0 0 {SIZE} {SIZE}"
         role="img"
-        aria-label="Phan bo {total} ticket dang mo theo nguoi"
+        aria-label={t("allocAria", { n: total })}
       >
         <g transform="rotate(-90 {SIZE / 2} {SIZE / 2})">
           {#each arcs as a (a.name)}
             <circle
               role="graphics-symbol"
-              aria-label="{a.label}: {a.value} ticket"
+              aria-label="{a.label}: {a.value}"
               cx={SIZE / 2}
               cy={SIZE / 2}
               r={R}
@@ -121,8 +124,8 @@
           text-anchor="middle"
           class="hero">{total}</text
         >
-        <text x={SIZE / 2} y={SIZE / 2 + 12} text-anchor="middle" class="hero-sub"
-          >ticket</text
+        <text x={SIZE / 2} y={SIZE / 2 + 11} text-anchor="middle" class="hero-sub"
+          >{t("ticket")}</text
         >
       </svg>
 
@@ -138,7 +141,7 @@
             <span class="swatch" style:background={s.color}></span>
             <span class="lg-name">{s.label}</span>
             <span class="lg-val num">{s.value}</span>
-            <span class="lg-pct num muted">{pct(s.value)}</span>
+            <span class="lg-pct num">{pct(s.value)}</span>
           </li>
         {/each}
       </ul>
@@ -160,7 +163,7 @@
             ></span>
           </span>
           <span class="bar-val num">{s.value}</span>
-          <span class="bar-pct num muted">{pct(s.value)}</span>
+          <span class="bar-pct num">{pct(s.value)}</span>
         </li>
       {/each}
     </ul>
@@ -169,9 +172,10 @@
 
 <style>
   .alloc {
-    display: flex;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 14px;
     align-items: center;
-    gap: 10px;
   }
 
   svg {
@@ -181,7 +185,7 @@
   .hero {
     fill: var(--text-primary);
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 680;
     /* so tri hero dung chu so ti le, khong dung tabular-nums */
   }
   .hero-sub {
@@ -193,20 +197,20 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 3px;
   }
   .legend li {
-    display: flex;
+    display: grid;
+    grid-template-columns: 9px 1fr auto auto;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
+    gap: 7px;
+    font-size: 10.5px;
     /* vung hover rong hon dau mau nhieu lan */
     padding: 1px 2px;
-    border-radius: 4px;
+    border-radius: var(--r-sm);
   }
   .legend li.dim {
     opacity: 0.45;
@@ -216,13 +220,11 @@
   }
 
   .swatch {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 2px;
-    flex: none;
   }
   .lg-name {
-    flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -230,13 +232,14 @@
     color: var(--text-secondary);
   }
   .lg-val {
-    font-weight: 600;
+    font-weight: 640;
     color: var(--text-primary);
   }
   .lg-pct {
     width: 30px;
     text-align: right;
     font-size: 10px;
+    color: var(--text-muted);
   }
 
   .bars {
@@ -245,13 +248,13 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--sp-sm);
   }
   .bars li {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
+    gap: var(--sp-md);
+    font-size: 10.5px;
   }
   .bar-name {
     width: 84px;
@@ -265,24 +268,25 @@
     flex: 1;
     height: 8px;
     background: var(--raised);
-    border-radius: 4px;
+    border-radius: var(--r-sm);
     overflow: hidden;
   }
   .fill {
     display: block;
     height: 100%;
-    /* dau mut bo tron 4px, neo vao vach goc */
-    border-radius: 0 4px 4px 0;
+    /* dau mut bo tron, neo vao vach goc */
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
     min-width: 3px;
   }
   .bar-val {
     width: 14px;
     text-align: right;
-    font-weight: 600;
+    font-weight: 640;
   }
   .bar-pct {
     width: 30px;
     text-align: right;
     font-size: 10px;
+    color: var(--text-muted);
   }
 </style>

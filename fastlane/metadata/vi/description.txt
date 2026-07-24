@@ -1,0 +1,30 @@
+Sprint đang chạy, lúc nào cũng trong tầm mắt.
+
+Master Jira ghim một panel gọn lên desktop, hiển thị trạng thái trực tiếp của active sprint — không cần mở tab trình duyệt, không phải đổi ngữ cảnh. Panel tự làm mới mỗi 60 giây và chỉ báo khi có thứ thực sự thay đổi.
+
+SINH RA CHO TEAM LEAD
+• Tiến độ sprint trong một cái liếc — done/tổng, story point luôn kèm mẫu số, và "chờ release" tách riêng khỏi done thật
+• Cảnh báo rủi ro — ticket đứng im nhiều ngày, sprint sắp hết, ticket sống quá lâu
+• Hàng đợi bàn giao — chờ review, chờ chính bạn duyệt, chờ release
+• Tải của team — thanh tiến độ từng thành viên và donut phân bổ khối lượng cả sprint
+• Thông báo native — đổi status, đổi assignee, ticket vào/ra sprint; nhiều thay đổi cùng lúc được gom thành một thông báo tổng hợp
+
+MỘT PANEL, HAI GÓC NHÌN
+Chuyển giữa "cả team" và "chỉ việc của tôi" ngay từ menu bar. Panel lọc lại tức thì trên dữ liệu mới nhất — mọi con số, cảnh báo và badge trên menu bar đổi theo.
+
+KHÔNG BAO GIỜ CHOÁN CHỖ
+• Chế độ desktop: panel dán vào nền desktop, nằm dưới mọi cửa sổ — liếc desktop là thấy, không bao giờ che việc đang làm. Hoặc chuyển sang chế độ nổi để luôn hiện trên cùng.
+• App menu bar: khởi động cùng máy, chế độ thu gọn, refresh một chạm.
+• Bấm vào ticket là mở thẳng trong trình duyệt.
+
+RIÊNG TƯ TỪ THIẾT KẾ
+• Chỉ đọc: app không bao giờ ghi gì lên Jira
+• Personal Access Token nằm trong Keychain của macOS, không bao giờ rời khỏi máy
+• Chỉ kết nối tới đúng máy chủ Jira bạn cấu hình — không analytics, không tracking, không máy chủ bên thứ ba
+
+YÊU CẦU
+• Jira Server hoặc Data Center 8.14 trở lên (Personal Access Token). Chưa hỗ trợ Jira Cloud.
+• Tài khoản Jira có quyền xem board bạn theo dõi.
+• Giao diện tiếng Việt và tiếng Anh.
+
+Jira là nhãn hiệu đã đăng ký của Atlassian Pty Ltd. Đây là sản phẩm độc lập, không liên kết, không được bảo trợ hay chứng thực bởi Atlassian.

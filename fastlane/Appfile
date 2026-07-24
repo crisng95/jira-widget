@@ -1,0 +1,2 @@
+app_identifier "com.isemi.jiraw"
+# Không cần apple_id khi auth bằng App Store Connect API key (lane push_metadata)

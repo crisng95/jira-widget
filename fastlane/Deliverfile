@@ -1,0 +1,14 @@
+# Cấu hình `deliver` — đẩy metadata lên App Store Connect.
+# Chạy qua lane: ASC_ISSUER_ID=<uuid> fastlane mac push_metadata
+platform "osx"
+app_identifier "com.isemi.jiraw"
+
+# Chỉ đẩy metadata — binary và screenshots upload riêng khi sẵn sàng
+skip_binary_upload true
+skip_screenshots true
+
+# Không chạy precheck tự động (nội dung đã rà tay; precheck hay báo giả với tên có trademark)
+run_precheck_before_submit false
+
+# Không hỏi xác nhận tương tác
+force true

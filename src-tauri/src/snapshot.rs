@@ -275,15 +275,36 @@ pub fn initials_of(name: Option<&str>, display: Option<&str>) -> String {
     "?".into()
 }
 
+/// Khoa kieu accountId cua Jira Cloud — khong phai username doc duoc.
+/// Dang `557058:f58131cb-...` (co dau `:`) hoac chuoi hex dai
+/// `5b10ac8d82e05b22cc7d4ef5`. Username DC khong bao gio co dau `:`.
+fn la_account_id(u: &str) -> bool {
+    u.contains(':') || (u.len() >= 20 && u.chars().all(|c| c.is_ascii_hexdigit()))
+}
+
+/// `alex.lee` -> `Tuan`. Ban gon cho khoa la username that (DC) — giu lai cho
+/// test va cho fallback khong co display name.
+pub fn short_name_map(usernames: &[String]) -> std::collections::HashMap<String, String> {
+    let pairs: Vec<(String, Option<String>)> =
+        usernames.iter().map(|u| (u.clone(), None)).collect();
+    short_name_map_display(&pairs)
+}
+
 /// `alex.lee` -> `Tuan`.
 ///
 /// Truoc day cot nay hien chu viet tat (`TN`, `ND`, `KN`...) — nhin vao phai
 /// giai ma tung cai, khong doc duoc. Ten goi thi nhan ra ngay.
 ///
 /// Neu hai nguoi trung ten goi (rat hay gap: hai ban cung ten Tuan) thi them
-/// chu cai ho: `Tuan N.` / `Tuan L.`; van trung nua thi tra ve username day du
+/// chu cai ho: `Tuan N.` / `Tuan L.`; van trung nua thi tra ve dinh danh day du
 /// — tha dai con hon chi sai nguoi.
-pub fn short_name_map(usernames: &[String]) -> std::collections::HashMap<String, String> {
+///
+/// Khoa kieu accountId (Cloud) khong rut ten goi tu khoa duoc — moi buoc lay
+/// tu DISPLAY name di kem: ten goi = tu dau, chu cai ho = tu thu hai, fallback
+/// cuoi = display day du (da cat hau to " - Phong ban").
+pub fn short_name_map_display(
+    pairs: &[(String, Option<String>)],
+) -> std::collections::HashMap<String, String> {
     use std::collections::HashMap;
 
     let seg = |u: &str, i: usize| -> String {
@@ -302,12 +323,27 @@ pub fn short_name_map(usernames: &[String]) -> std::collections::HashMap<String,
             None => String::new(),
         }
     };
+    // Tu display "Gale Shaw - Engineering" lay word thu `i` cua phan ten.
+    let dword = |d: &str, i: usize| -> String {
+        shorten_display(d)
+            .split_whitespace()
+            .nth(i)
+            .unwrap_or("")
+            .chars()
+            .filter(|c| c.is_alphabetic())
+            .collect()
+    };
 
     // buoc 1: ten goi
     let mut label: HashMap<String, String> = HashMap::new();
-    for u in usernames {
-        let t = cap(&seg(u, 0));
-        label.insert(u.clone(), if t.is_empty() { u.clone() } else { t });
+    for (u, d) in pairs {
+        let goi = if la_account_id(u) {
+            d.as_deref().map(|x| cap(&dword(x, 0)))
+        } else {
+            Some(cap(&seg(u, 0)))
+        };
+        let goi = goi.filter(|s| !s.is_empty());
+        label.insert(u.clone(), goi.unwrap_or_else(|| u.clone()));
     }
 
     // buoc 2: trung thi them chu cai ho
@@ -319,22 +355,34 @@ pub fn short_name_map(usernames: &[String]) -> std::collections::HashMap<String,
         c
     };
     let counts = dup(&label);
-    for u in usernames {
+    for (u, d) in pairs {
         let cur = label[u].clone();
         if counts.get(&cur).copied().unwrap_or(0) > 1 {
-            let ho = seg(u, 1);
+            let ho = if la_account_id(u) {
+                d.as_deref().map(|x| dword(x, 1)).unwrap_or_default()
+            } else {
+                seg(u, 1)
+            };
             if let Some(ch) = ho.chars().next() {
                 label.insert(u.clone(), format!("{cur} {}.", ch.to_uppercase()));
             }
         }
     }
 
-    // buoc 3: van trung -> dung han username
+    // buoc 3: van trung -> DC dung han username; Cloud dung han display name
     let counts2 = dup(&label);
-    for u in usernames {
+    for (u, d) in pairs {
         let cur = label[u].clone();
         if counts2.get(&cur).copied().unwrap_or(0) > 1 {
-            label.insert(u.clone(), u.clone());
+            let full = if la_account_id(u) {
+                d.as_deref()
+                    .map(shorten_display)
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or_else(|| u.clone())
+            } else {
+                u.clone()
+            };
+            label.insert(u.clone(), full);
         }
     }
     label
@@ -440,7 +488,12 @@ pub fn build(
         let status = r.fields.status.name.clone();
         let is_pending_release = cfg.pending_release_statuses.iter().any(|s| s == &status);
 
-        let assignee = r.fields.assignee.as_ref().and_then(|u| u.name.clone());
+        // Khoa dinh danh: `name` (DC) else `accountId` (Cloud). Moi phep so
+        // khop — `me`, mau sac, gom nhom — deu chay tren khoa nay.
+        let assignee = r.fields.assignee.as_ref().and_then(|u| u.username());
+        // Ten that chi DC co. Initials phai suy tu no (hoac display), KHONG
+        // duoc suy tu khoa: khoa Cloud la accountId, rut chu cai ra rac.
+        let assignee_real_name = r.fields.assignee.as_ref().and_then(|u| u.name.clone());
         let assignee_display = r
             .fields
             .assignee
@@ -451,7 +504,7 @@ pub fn build(
         let idle_days = calendar_days_between(updated, now);
 
         issues.push(Issue {
-            initials: initials_of(assignee.as_deref(), assignee_display.as_deref()),
+            initials: initials_of(assignee_real_name.as_deref(), assignee_display.as_deref()),
             short_name: String::new(), // dien o pass 2, khi da biet het assignee
             key: r.key.clone(),
             url: format!("{base}/browse/{}", r.key),
@@ -496,11 +549,18 @@ pub fn build(
     issues.sort_by(|a, b| b.updated.cmp(&a.updated));
 
     // Pass 2 — ten goi phai biet TOAN BO assignee moi phat hien duoc trung ten,
-    // nen khong the tinh trong vong lap dung tung ticket o tren.
-    let mut users: Vec<String> = issues.iter().filter_map(|i| i.assignee.clone()).collect();
-    users.sort();
-    users.dedup();
-    let short = short_name_map(&users);
+    // nen khong the tinh trong vong lap dung tung ticket o tren. Mang theo ca
+    // display name: khoa kieu accountId (Cloud) chi rut duoc ten goi tu display.
+    let mut pairs: Vec<(String, Option<String>)> = Vec::new();
+    for i in &issues {
+        if let Some(u) = &i.assignee {
+            if !pairs.iter().any(|(k, _)| k == u) {
+                pairs.push((u.clone(), i.assignee_display.clone()));
+            }
+        }
+    }
+    pairs.sort_by(|a, b| a.0.cmp(&b.0));
+    let short = short_name_map_display(&pairs);
     for i in issues.iter_mut() {
         i.short_name = match &i.assignee {
             Some(u) => short.get(u).cloned().unwrap_or_else(|| u.clone()),
@@ -525,11 +585,18 @@ pub fn build(
             name: me.to_string(),
             // Co ticket thi lay dung ten goi da tinh tren toan bo assignee (co
             // the co hau to chong trung); khong co thi tu suy tu username.
+            // Rieng `me` kieu accountId (Cloud) ma khong co ticket nao thi
+            // khong co gi doc duoc de suy — tra RONG cho frontend tu thay
+            // bang chu "tôi"/"me", khong hien khoa tho.
             short: mine.map(|i| i.short_name.clone()).unwrap_or_else(|| {
-                short_name_map(&[me.to_string()])
-                    .get(me)
-                    .cloned()
-                    .unwrap_or_else(|| me.to_string())
+                if la_account_id(me) {
+                    String::new()
+                } else {
+                    short_name_map(&[me.to_string()])
+                        .get(me)
+                        .cloned()
+                        .unwrap_or_else(|| me.to_string())
+                }
             }),
             display: mine
                 .and_then(|i| i.assignee_display.as_deref())
@@ -802,6 +869,7 @@ mod tests {
                 },
                 assignee: assignee.map(|(n, d)| RawUser {
                     name: Some(n.into()),
+                    account_id: None,
                     display_name: Some(d.into()),
                 }),
                 created: created.into(),
@@ -1351,6 +1419,36 @@ mod tests {
         let m = short_name_map(&users);
         assert_eq!(m["alex.lee"], "alex.lee");
         assert_eq!(m["alex.lee2"], "alex.lee2");
+    }
+
+    #[test]
+    fn nhan_dien_khoa_account_id_cua_cloud() {
+        assert!(la_account_id("712020:f58131cb-b67d-43c7"));
+        assert!(la_account_id("5b10ac8d82e05b22cc7d4ef5"));
+        assert!(!la_account_id("sam.hale"));
+        assert!(!la_account_id("tuannguyen"));
+    }
+
+    #[test]
+    fn cloud_account_id_lay_ten_goi_tu_display_name() {
+        // Jira Cloud: khoa la accountId — ten goi PHAI rut tu display name,
+        // rut tu khoa la ra chuoi hex vo nghia.
+        let pairs = vec![
+            ("712020:aa-bb".to_string(), Some("Gale Shaw - Engineering".to_string())),
+            ("5b10ac8d82e05b22cc7d4ef5".to_string(), Some("Gale Nguyen".to_string())),
+            ("sam.hale".to_string(), None),
+        ];
+        let m = short_name_map_display(&pairs);
+        assert_eq!(m["712020:aa-bb"], "Gale S.", "trung ten goi -> chu cai ho tu display");
+        assert_eq!(m["5b10ac8d82e05b22cc7d4ef5"], "Gale N.");
+        assert_eq!(m["sam.hale"], "Sam", "khoa DC van di duong username");
+    }
+
+    #[test]
+    fn cloud_khong_co_display_thi_dung_han_khoa_thay_vi_panic() {
+        let pairs = vec![("712020:aa-bb".to_string(), None)];
+        let m = short_name_map_display(&pairs);
+        assert_eq!(m["712020:aa-bb"], "712020:aa-bb");
     }
 
     #[test]

@@ -58,11 +58,11 @@ impl Change {
             Change::StatusChanged { key, from, to, .. } => format!("{key}: {from} → {to}"),
             Change::AssigneeChanged { key, from, to, .. } => format!(
                 "{key}: {} → {}",
-                from.as_deref().unwrap_or("chua giao"),
-                to.as_deref().unwrap_or("chua giao")
+                from.as_deref().unwrap_or("chưa giao"),
+                to.as_deref().unwrap_or("chưa giao")
             ),
-            Change::Added { key, status, .. } => format!("{key} vao sprint ({status})"),
-            Change::Removed { key, .. } => format!("{key} roi sprint"),
+            Change::Added { key, status, .. } => format!("{key} vào sprint ({status})"),
+            Change::Removed { key, .. } => format!("{key} rời sprint"),
         }
     }
 }
@@ -149,10 +149,10 @@ pub fn to_notifications(
             .iter()
             .map(|c| Notification {
                 title: match c {
-                    Change::StatusChanged { .. } => format!("{project} · doi trang thai"),
-                    Change::AssigneeChanged { .. } => format!("{project} · doi nguoi lam"),
-                    Change::Added { .. } => format!("{project} · ticket moi"),
-                    Change::Removed { .. } => format!("{project} · ticket roi sprint"),
+                    Change::StatusChanged { .. } => format!("{project} · đổi trạng thái"),
+                    Change::AssigneeChanged { .. } => format!("{project} · đổi người làm"),
+                    Change::Added { .. } => format!("{project} · ticket mới"),
+                    Change::Removed { .. } => format!("{project} · ticket rời sprint"),
                 },
                 body: c.line(),
             })
@@ -162,10 +162,10 @@ pub fn to_notifications(
     // Qua nguong -> 1 notification tong hop, liet ke toi da 4 dong dau.
     let mut body: Vec<String> = kept.iter().take(4).map(|c| c.line()).collect();
     if kept.len() > 4 {
-        body.push(format!("... va {} thay doi khac", kept.len() - 4));
+        body.push(format!("… và {} thay đổi khác", kept.len() - 4));
     }
     vec![Notification {
-        title: format!("{project} · {} thay doi", kept.len()),
+        title: format!("{project} · {} thay đổi", kept.len()),
         body: body.join("\n"),
     }]
 }
@@ -199,6 +199,7 @@ mod tests {
                 },
                 assignee: assignee.map(|n| RawUser {
                     name: Some(n.into()),
+                    account_id: None,
                     display_name: Some(n.to_uppercase()),
                 }),
                 created: "2026-07-10T10:00:00.000+0700".into(),
@@ -251,7 +252,7 @@ mod tests {
         let b = snap(9302, vec![mk("PROJ-1", "Open", "new", Some("evan.diaz"))]);
         let d = diff(&a, &b);
         assert_eq!(d.len(), 1);
-        assert_eq!(d[0].line(), "PROJ-1: chua giao → EVAN.DIAZ");
+        assert_eq!(d[0].line(), "PROJ-1: chưa giao → EVAN.DIAZ");
     }
 
     #[test]
@@ -351,8 +352,8 @@ mod tests {
             .collect();
         let n = to_notifications(&ch, &cfg, "PROJ");
         assert_eq!(n.len(), 1, "6 thay doi -> 1 notification thay vi 6");
-        assert_eq!(n[0].title, "PROJ · 6 thay doi");
-        assert!(n[0].body.contains("va 2 thay doi khac"));
+        assert_eq!(n[0].title, "PROJ · 6 thay đổi");
+        assert!(n[0].body.contains("và 2 thay đổi khác"));
     }
 
     #[test]

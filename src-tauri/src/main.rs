@@ -3,11 +3,13 @@
 mod config;
 mod diff;
 mod jira;
+mod oauth;
 mod poller;
 mod settings;
 mod snapshot;
 
-use config::{DisplayMode, WindowLayer};
+use config::{AuthMode, DisplayMode, WindowLayer};
+use jira::JiraAuth;
 use poller::{AppState, Inner, PanelState};
 use std::sync::{Arc, OnceLock};
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
@@ -18,6 +20,10 @@ use tauri::{Emitter, LogicalSize, Manager, WebviewWindow};
 const EVENT_TOGGLE_COMPACT: &str = "panel://toggle-compact";
 /// Mode vua doi — cua so Cai dat dang mo can biet de radio khong hien sai
 const EVENT_DISPLAY_MODE: &str = "panel://display-mode";
+/// Ngon ngu vua doi — moi webview dang mo tu doi chuoi, khong can khoi dong lai
+const EVENT_LANGUAGE: &str = "panel://language";
+/// Tray bat che do di chuyen — frontend hien banner "keo roi bam Xong"
+const EVENT_MOVE_MODE: &str = "panel://move-mode";
 
 /// Tich "Chi viec cua toi" tren tray. Giu tham chieu de con dong bo khi mode
 /// bi doi tu cho khac (chip tren panel, radio trong Cai dat).
@@ -67,10 +73,30 @@ mod desktop_layer {
     }
 }
 
-const COMPACT_HEIGHT: f64 = 118.0;
+// Thu gon theo he moi: header 1 dong (title + dem nguoc, ~39px) + strip tien
+// do (~28px) + vien. Phai >= minHeight trong tauri.conf.json, khong thi
+// set_size bi kep va panel khong thu xuong duoc.
+const COMPACT_HEIGHT: f64 = 72.0;
 const FULL_HEIGHT: f64 = 620.0;
 const PANEL_WIDTH: f64 = 360.0;
 const SCREEN_MARGIN: f64 = 16.0;
+
+/// Nhan tray theo ngon ngu trong config. Tray dung chuoi tinh — doi ngon ngu
+/// se ap dung sau lan khoi dong ke tiep (webview thi doi nong duoc).
+fn tray_label(lang: &str, key: &str) -> &'static str {
+    let en = lang == "en";
+    match key {
+        "show" => if en { "Show / hide panel" } else { "Hiện / ẩn panel" },
+        "compact" => if en { "Collapse / expand" } else { "Thu gọn / mở rộng" },
+        "onlyme" => if en { "Only my work" } else { "Chỉ việc của tôi" },
+        "refresh" => if en { "Refresh now" } else { "Refresh ngay" },
+        "move" => if en { "Move panel…" } else { "Di chuyển panel…" },
+        "settings" => if en { "Settings…" } else { "Cài đặt…" },
+        "autostart" => if en { "Start with macOS" } else { "Khởi động cùng macOS" },
+        "quit" => if en { "Quit" } else { "Thoát" },
+        _ => "",
+    }
+}
 
 // ---------------------------------------------------------------- commands
 
@@ -97,8 +123,10 @@ fn open_issue(app: tauri::AppHandle, url: String) -> Result<(), String> {
         st.cfg.jira_url.trim_end_matches('/').to_string()
     };
     // Chi cho mo link tro ve dung Jira instance — khong bien command nay
-    // thanh cai cong mo URL tuy y.
-    if !url.starts_with(&cfg_base) {
+    // thanh cai cong mo URL tuy y. So sanh THEO GOC (scheme+host+port) chu
+    // khong phai prefix chuoi: `https://jira.x.com.evil.com` va
+    // `https://jira.x.com@evil.com` deu vuot qua duoc prefix check.
+    if !jira::same_origin(&url, &cfg_base) {
         log::warn!("tu choi mo URL ngoai Jira: {url}");
         return Err(format!("tu choi mo URL ngoai Jira: {url}"));
     }
@@ -147,8 +175,8 @@ async fn apply_display_mode(
     let eff = want.effective_for(&state.cfg.me);
     if eff != want {
         sync_tick(state.inner.lock().await.display_mode);
-        return Err("Chua dien username o Cai dat → Ket noi nen chua bat duoc \
-             \"chi viec cua toi\". Neu vua dien thi bam \"Luu & khoi dong lai\" da."
+        return Err("Chưa điền username ở Cài đặt → Phạm vi nên chưa bật được \
+             “chỉ việc của tôi”. Nếu vừa điền thì bấm “Lưu & khởi động lại” đã."
             .into());
     }
 
@@ -194,6 +222,86 @@ async fn set_display_mode(
     let st = state.inner().clone();
     let eff = apply_display_mode(&app, &st, DisplayMode::from_str_or_team(&mode)).await?;
     Ok(eff.as_str().to_string())
+}
+
+/// Doi ngon ngu NONG: ghi config + bao moi webview dang mo. Khong dung toi
+/// mang hay cache nen khong can khoi dong lai; rieng nhan tray la chuoi tinh,
+/// se dung ngon ngu moi o lan khoi dong sau.
+#[tauri::command]
+async fn set_language(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<AppState>>,
+    lang: String,
+) -> Result<String, String> {
+    let eff = config::normalize_lang(&lang);
+    state.inner.lock().await.language = eff.to_string();
+
+    match config::load() {
+        Ok(mut c) => {
+            c.language = eff.to_string();
+            if let Err(e) = config::save(&c) {
+                log::warn!("khong ghi duoc language xuong config: {e}");
+            }
+        }
+        Err(e) => log::warn!("khong doc duoc config de ghi language: {e}"),
+    }
+
+    let _ = app.emit(EVENT_LANGUAGE, eff);
+    log::info!("language -> {eff}");
+    Ok(eff.to_string())
+}
+
+/// Mo cua so Cai dat tu panel (nut tren notice loi token chang han).
+#[tauri::command]
+fn settings_open(app: tauri::AppHandle) {
+    settings::open_window(&app);
+}
+
+/// An panel xuong menu bar — nut ⤓ tren header. Hien lai bang icon tray.
+#[tauri::command]
+fn hide_panel(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.hide();
+    }
+}
+
+/// Che do di chuyen: panel tam noi len tren de nhan chuot va keo tu do;
+/// bam "Xong" thi tra ve dung tang da cau hinh (desktop hoac floating).
+#[tauri::command]
+fn set_move_mode(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<AppState>>,
+    moving: bool,
+) -> Result<(), String> {
+    let Some(win) = app.get_webview_window("main") else {
+        return Ok(());
+    };
+    if moving {
+        let _ = win.set_always_on_top(true);
+        let _ = win.show();
+        let _ = win.set_focus();
+        log::info!("bat che do di chuyen panel");
+        return Ok(());
+    }
+    match state.cfg.window_layer {
+        WindowLayer::Desktop => {
+            let _ = win.set_always_on_top(false);
+            #[cfg(target_os = "macos")]
+            {
+                match win.ns_window() {
+                    Ok(ptr) => {
+                        desktop_layer::pin(ptr);
+                    }
+                    Err(e) => log::warn!("khong lay duoc NSWindow khi tra panel ve desktop: {e}"),
+                }
+            }
+        }
+        WindowLayer::Floating => {
+            let _ = win.set_always_on_top(true);
+        }
+    }
+    log::info!("tat che do di chuyen — panel ve tang {:?}", state.cfg.window_layer);
+    Ok(())
 }
 
 #[tauri::command]
@@ -252,18 +360,21 @@ fn place_top_right_if_first_run(app: &tauri::AppHandle, win: &WebviewWindow) {
 }
 
 fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let show = MenuItem::with_id(app, "show", "Hien / an panel", true, None::<&str>)?;
-    let prefs = MenuItem::with_id(app, "settings", "Cai dat...", true, None::<&str>)?;
-    let compact = MenuItem::with_id(app, "compact", "Thu gon / mo rong", true, None::<&str>)?;
-    let refresh = MenuItem::with_id(app, "refresh", "Refresh ngay", true, None::<&str>)?;
+    let lang = config::normalize_lang(&app.state::<Arc<AppState>>().cfg.language).to_string();
+    let tl = |k: &str| tray_label(&lang, k);
+
+    let show = MenuItem::with_id(app, "show", tl("show"), true, None::<&str>)?;
+    let prefs = MenuItem::with_id(app, "settings", tl("settings"), true, None::<&str>)?;
+    let compact = MenuItem::with_id(app, "compact", tl("compact"), true, None::<&str>)?;
+    let refresh = MenuItem::with_id(app, "refresh", tl("refresh"), true, None::<&str>)?;
+    let move_item = MenuItem::with_id(app, "move", tl("move"), true, None::<&str>)?;
     let project = app.state::<Arc<AppState>>().cfg.project_key.clone();
-    let board = MenuItem::with_id(
-        app,
-        "board",
-        &format!("Mo board {project}"),
-        true,
-        None::<&str>,
-    )?;
+    let board_label = if lang == "en" {
+        format!("Open board {project}")
+    } else {
+        format!("Mở board {project}")
+    };
+    let board = MenuItem::with_id(app, "board", &board_label, true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
 
     // Only Me chi co nghia khi biet "toi" la ai — chua dien username thi item
@@ -274,7 +385,7 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let onlyme = CheckMenuItem::with_id(
         app,
         "onlyme",
-        "Chi viec cua toi",
+        tl("onlyme"),
         co_me,
         dang_only_me,
         None::<&str>,
@@ -285,17 +396,20 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let autostart = CheckMenuItem::with_id(
         app,
         "autostart",
-        "Khoi dong cung macOS",
+        tl("autostart"),
         true,
         autostart_on,
         None::<&str>,
     )?;
 
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "Thoat", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", tl("quit"), true, None::<&str>)?;
     let menu = Menu::with_items(
         app,
-        &[&show, &compact, &onlyme, &refresh, &board, &sep, &prefs, &autostart, &sep2, &quit],
+        &[
+            &show, &compact, &onlyme, &refresh, &move_item, &board, &sep, &prefs, &autostart,
+            &sep2, &quit,
+        ],
     )?;
 
     // Giu tham chieu de tich lai o dung trang thai that sau khi bat/tat
@@ -305,7 +419,7 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .icon(app.default_window_icon().expect("co icon mac dinh").clone())
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .tooltip(&format!("Jira Widget — {project}"))
+        .tooltip(&format!("Master Jira — {project}"))
         .on_menu_event(move |app, event| match event.id.as_ref() {
             "show" => toggle_window(app),
             "settings" => settings::open_window(app),
@@ -314,6 +428,12 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
             "compact" => {
                 if let Err(e) = app.emit(EVENT_TOGGLE_COMPACT, ()) {
                     log::warn!("khong gui duoc lenh thu gon: {e}");
+                }
+            }
+            // Frontend hien banner + goi set_move_mode(true); Rust chi bao hieu.
+            "move" => {
+                if let Err(e) = app.emit(EVENT_MOVE_MODE, ()) {
+                    log::warn!("khong gui duoc lenh di chuyen: {e}");
                 }
             }
             "autostart" => {
@@ -401,7 +521,7 @@ fn init_logging() {
 
 fn print_help() {
     println!(
-        "Jira Widget\n\n\
+        "Master Jira\n\n\
          jira-widget                 chay panel\n\
          jira-widget --set-token     nap Jira PAT cua ban vao Keychain (doc tu stdin)\n\
          jira-widget --clear-token   xoa token khoi Keychain\n\
@@ -424,8 +544,22 @@ fn list_boards(project: Option<&str>) -> anyhow::Result<()> {
             "chua biet project nao. Chay: jira-widget --list-boards <PROJECT>"
         ));
     }
-    let token = config::resolve_token(&cfg)?;
-    let client = jira::JiraClient::new(&cfg.jira_url, token)?;
+    let client = match cfg.auth_mode {
+        AuthMode::DcPat => jira::JiraClient::new_pat(&cfg.jira_url, config::resolve_token(&cfg)?)?,
+        AuthMode::CloudBasic => jira::JiraClient::new(
+            &cfg.jira_url,
+            None,
+            JiraAuth::Basic {
+                email: cfg.email.trim().to_string(),
+                token: config::resolve_token(&cfg)?,
+            },
+        )?,
+        AuthMode::CloudOauth => {
+            return Err(anyhow::anyhow!(
+                "config dang o che do OAuth — dung wizard/Cai dat trong app de chon board"
+            ));
+        }
+    };
     let rt = tokio::runtime::Runtime::new()?;
     let boards = rt.block_on(client.list_boards(&key))?;
 
@@ -473,14 +607,51 @@ fn main() {
             std::process::exit(1);
         }
     };
-    // Chua co token: KHONG chet lang le nua — mo thang cua so cai dat de
-    // nguoi dung dan PAT vao, vi ho vua bao la khong muon dung dong lenh.
-    let token = config::resolve_token(&cfg).unwrap_or_else(|e| {
-        log::warn!("{e}");
-        String::new()
-    });
-    let thieu_token = token.is_empty();
-    let client = match jira::JiraClient::new(&cfg.jira_url, token) {
+    // Dung auth theo mode. Thieu credential thi KHONG chet lang le — dau panel
+    // di va mo wizard; client van duoc dung (voi bi mat rong) de moi request
+    // tra ve Auth va panel hien dung state neu wizard bi dong ngang.
+    let (auth, api_base, thieu_token) = match cfg.auth_mode {
+        AuthMode::DcPat => {
+            let token = config::resolve_token(&cfg).unwrap_or_else(|e| {
+                log::warn!("{e}");
+                String::new()
+            });
+            let thieu = token.is_empty();
+            (JiraAuth::Pat(token), None, thieu)
+        }
+        AuthMode::CloudBasic => {
+            let token = config::resolve_token(&cfg).unwrap_or_else(|e| {
+                log::warn!("{e}");
+                String::new()
+            });
+            let thieu = token.is_empty() || cfg.email.trim().is_empty();
+            (
+                JiraAuth::Basic {
+                    email: cfg.email.trim().to_string(),
+                    token,
+                },
+                None,
+                thieu,
+            )
+        }
+        AuthMode::CloudOauth => {
+            let thieu = !oauth::has_refresh_token() || cfg.cloud_id.trim().is_empty();
+            let api = (!cfg.cloud_id.trim().is_empty())
+                .then(|| oauth::api_base_for(&cfg.cloud_id));
+            // Store DUNG CHUNG voi cac lenh probe/whoami — refresh token xoay
+            // vong nen ca process chi duoc phep co MOT nguoi giu no.
+            match oauth::shared_store(&cfg) {
+                Ok(store) => (JiraAuth::Oauth(store), api, thieu),
+                Err(e) => {
+                    // Chua cau hinh backend OAuth ma config lai ghi cloud_oauth
+                    // — coi nhu chua dang nhap, de wizard/Cai dat xu ly.
+                    log::warn!("khong dung duoc OAuth store: {e:#}");
+                    (JiraAuth::Pat(String::new()), api, true)
+                }
+            }
+        }
+    };
+    let client = match jira::JiraClient::new(&cfg.jira_url, api_base, auth) {
         Ok(c) => Arc::new(c),
         Err(e) => {
             eprintln!("Khong khoi tao duoc HTTP client: {e:#}");
@@ -492,10 +663,11 @@ fn main() {
     // Doc mode tu config NHUNG da qua `effective_`: file bi sua tay thanh
     // only_me trong khi `me` rong thi ve team, khong de panel rong (AC-D5).
     let mode = cfg.effective_display_mode();
+    let lang = config::normalize_lang(&cfg.language).to_string();
     let state = Arc::new(AppState {
         cfg,
         client,
-        inner: Mutex::new(Inner::new(mode)),
+        inner: Mutex::new(Inner::new(mode, lang)),
         refresh_tx,
     });
 
@@ -541,8 +713,14 @@ fn main() {
 
             build_tray(app)?;
 
+            // Lan dau (chua co token): dau panel di — dang sau wizard ma lo mot
+            // panel bao loi ket noi thi rat de tuong app hong — roi mo wizard
+            // dan tung buoc. Nguoi dung cu du thong tin thi khong thay gi ca.
             if thieu_token {
-                settings::open_window(app.handle());
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.hide();
+                }
+                settings::open_onboarding(app.handle());
             }
 
             let handle = app.handle().clone();
@@ -558,6 +736,10 @@ fn main() {
             open_issue,
             set_compact,
             set_display_mode,
+            set_language,
+            settings_open,
+            hide_panel,
+            set_move_mode,
             get_autostart,
             set_autostart,
             settings::settings_get,
@@ -568,7 +750,11 @@ fn main() {
             settings::settings_list_boards,
             settings::settings_project_statuses,
             settings::settings_apply_restart,
-            settings::settings_close
+            settings::settings_close,
+            settings::onboarding_finish,
+            settings::oauth_begin,
+            settings::oauth_whoami,
+            settings::oauth_logout
         ])
         .run(tauri::generate_context!())
         .expect("khong khoi dong duoc app");

@@ -17,6 +17,8 @@ use std::process::Command;
 
 pub const KEYCHAIN_SERVICE: &str = "jira-widget";
 pub const KEYCHAIN_ACCOUNT: &str = "jira-pat";
+/// Refresh token cua OAuth 3LO — tach account rieng, khong tron voi PAT/API token.
+pub const KEYCHAIN_OAUTH_ACCOUNT: &str = "jira-oauth";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
@@ -41,6 +43,45 @@ impl Default for NotifyConfig {
             added: true,
             removed: true,
             group_threshold: 3,
+        }
+    }
+}
+
+/// Cach app xac thuc voi Jira. Ba duong khac han nhau ve HTTP header lan noi
+/// giu bi mat:
+///   - `DcPat`: Jira Data Center/Server 8.14+ — `Authorization: Bearer <PAT>`.
+///   - `CloudBasic`: Jira Cloud API token — `Authorization: Basic b64(email:token)`.
+///   - `CloudOauth`: "Login with Atlassian" (3LO) — Bearer access token ngan han,
+///     refresh token nam trong Keychain, API di qua `api.atlassian.com/ex/jira/{cloud_id}`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthMode {
+    DcPat,
+    CloudBasic,
+    CloudOauth,
+}
+
+impl Default for AuthMode {
+    fn default() -> Self {
+        AuthMode::DcPat
+    }
+}
+
+impl AuthMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            AuthMode::DcPat => "dc_pat",
+            AuthMode::CloudBasic => "cloud_basic",
+            AuthMode::CloudOauth => "cloud_oauth",
+        }
+    }
+
+    /// Doc tu chuoi UI gui xuong. Gia tri la thi ve `DcPat` chu khong panic.
+    pub fn from_str_or_dc(s: &str) -> AuthMode {
+        match s {
+            "cloud_basic" => AuthMode::CloudBasic,
+            "cloud_oauth" => AuthMode::CloudOauth,
+            _ => AuthMode::DcPat,
         }
     }
 }
@@ -108,6 +149,20 @@ impl DisplayMode {
     }
 }
 
+/// Ngon ngu UI duoc ho tro day du. Cac ngon ngu khac trong wizard chi la
+/// "nhap" (draft) va bi khoa cho toi khi co ban dich soat xong.
+pub const SUPPORTED_LANGS: [&str; 2] = ["vi", "en"];
+
+/// Chuan hoa ma ngon ngu ve mot gia tri ho tro; gia tri la thi ve "vi".
+pub fn normalize_lang(s: &str) -> &'static str {
+    for l in SUPPORTED_LANGS {
+        if s.eq_ignore_ascii_case(l) || s.to_ascii_lowercase().starts_with(&format!("{l}-")) {
+            return l;
+        }
+    }
+    "vi"
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
@@ -149,6 +204,20 @@ pub struct Config {
     pub window_layer: WindowLayer,
     /// `team` (mac dinh) hay `only_me`. Doi duoc NONG, khong can khoi dong lai.
     pub display_mode: DisplayMode,
+    /// Ngon ngu UI: "vi" (mac dinh) hay "en". Doi duoc NONG nhu display_mode.
+    pub language: String,
+    /// Cach xac thuc: `dc_pat` (mac dinh) | `cloud_basic` | `cloud_oauth`.
+    pub auth_mode: AuthMode,
+    /// Email tai khoan Atlassian — chi dung o `cloud_basic` (Basic auth can no).
+    pub email: String,
+    /// Cloud ID cua site — chi dung o `cloud_oauth` (API base ex/jira/{cloud_id}).
+    pub cloud_id: String,
+    /// OAuth 3LO client id — trong thi nut "Login with Atlassian" bi an.
+    /// Uu tien config; fallback bien build `MASTERJIRA_OAUTH_CLIENT_ID`.
+    pub oauth_client_id: String,
+    /// URL cua backend token-exchange (Cloudflare Worker giu client_secret).
+    /// Fallback bien build `MASTERJIRA_OAUTH_BACKEND_URL`.
+    pub oauth_backend_url: String,
     /// Fallback khi khong dung Keychain. De trong o cau hinh mac dinh.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub token: Option<String>,
@@ -178,6 +247,12 @@ impl Default for Config {
             notify: NotifyConfig::default(),
             window_layer: WindowLayer::default(),
             display_mode: DisplayMode::default(),
+            language: "vi".into(),
+            auth_mode: AuthMode::default(),
+            email: String::new(),
+            cloud_id: String::new(),
+            oauth_client_id: String::new(),
+            oauth_backend_url: String::new(),
             token: None,
         }
     }
@@ -187,6 +262,37 @@ impl Config {
     /// Mode thuc su duoc ap dung, da tinh ca truong hop `me` rong (AC-D5).
     pub fn effective_display_mode(&self) -> DisplayMode {
         self.display_mode.effective_for(&self.me)
+    }
+
+    /// Client id 3LO hieu dung: config truoc, bien build sau. Trong = chua bat OAuth.
+    pub fn oauth_client_id(&self) -> Option<String> {
+        let from_cfg = self.oauth_client_id.trim();
+        if !from_cfg.is_empty() {
+            return Some(from_cfg.to_string());
+        }
+        option_env!("MASTERJIRA_OAUTH_CLIENT_ID")
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(String::from)
+    }
+
+    /// URL backend token-exchange hieu dung (khong co dau `/` cuoi).
+    pub fn oauth_backend_url(&self) -> Option<String> {
+        let from_cfg = self.oauth_backend_url.trim();
+        let raw = if !from_cfg.is_empty() {
+            Some(from_cfg.to_string())
+        } else {
+            option_env!("MASTERJIRA_OAUTH_BACKEND_URL")
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(String::from)
+        };
+        raw.map(|s| s.trim_end_matches('/').to_string())
+    }
+
+    /// Du dieu kien hien nut "Login with Atlassian" chua.
+    pub fn oauth_configured(&self) -> bool {
+        self.oauth_client_id().is_some() && self.oauth_backend_url().is_some()
     }
 }
 
@@ -257,14 +363,14 @@ pub fn save(cfg: &Config) -> Result<()> {
 
 // ---------------------------------------------------------------- Keychain
 
-pub fn keychain_get() -> Option<String> {
+pub fn keychain_get_account(account: &str) -> Option<String> {
     let out = Command::new("security")
         .args([
             "find-generic-password",
             "-s",
             KEYCHAIN_SERVICE,
             "-a",
-            KEYCHAIN_ACCOUNT,
+            account,
             "-w",
         ])
         .output()
@@ -280,14 +386,18 @@ pub fn keychain_get() -> Option<String> {
     }
 }
 
-pub fn keychain_set(token: &str) -> Result<()> {
+pub fn keychain_get() -> Option<String> {
+    keychain_get_account(KEYCHAIN_ACCOUNT)
+}
+
+pub fn keychain_set_account(account: &str, token: &str) -> Result<()> {
     let status = Command::new("security")
         .args([
             "add-generic-password",
             "-s",
             KEYCHAIN_SERVICE,
             "-a",
-            KEYCHAIN_ACCOUNT,
+            account,
             "-w",
             token,
             "-U",
@@ -297,6 +407,25 @@ pub fn keychain_set(token: &str) -> Result<()> {
     if !status.success() {
         return Err(anyhow!("security add-generic-password that bai"));
     }
+    Ok(())
+}
+
+pub fn keychain_set(token: &str) -> Result<()> {
+    keychain_set_account(KEYCHAIN_ACCOUNT, token)
+}
+
+/// Xoa mot muc khoi Keychain. Muc khong ton tai KHONG phai loi.
+pub fn keychain_delete_account(account: &str) -> Result<()> {
+    Command::new("security")
+        .args([
+            "delete-generic-password",
+            "-s",
+            KEYCHAIN_SERVICE,
+            "-a",
+            account,
+        ])
+        .output()
+        .context("khong chay duoc `security` CLI")?;
     Ok(())
 }
 
@@ -458,6 +587,59 @@ mod tests {
             "gia tri la thi ve mac dinh chu khong panic"
         );
         assert_eq!(DisplayMode::OnlyMe.as_str(), "only_me");
+    }
+
+    #[test]
+    fn language_mac_dinh_vi_va_chuan_hoa_gia_tri_la() {
+        // Config cu khong co dong language phai doc duoc va ve "vi".
+        let cu: Config = toml::from_str(r#"jira_url = "https://jira.example.com""#).unwrap();
+        assert_eq!(cu.language, "vi");
+
+        assert_eq!(normalize_lang("vi"), "vi");
+        assert_eq!(normalize_lang("en"), "en");
+        assert_eq!(normalize_lang("EN"), "en");
+        assert_eq!(normalize_lang("en-US"), "en");
+        assert_eq!(normalize_lang("vi-VN"), "vi");
+        assert_eq!(normalize_lang("fr"), "vi", "chua ho tro thi ve vi");
+        assert_eq!(normalize_lang(""), "vi");
+    }
+
+    #[test]
+    fn auth_mode_mac_dinh_dc_pat_va_config_cu_van_doc_duoc() {
+        assert_eq!(Config::default().auth_mode, AuthMode::DcPat);
+        let cu: Config = toml::from_str(r#"jira_url = "https://jira.example.com""#).unwrap();
+        assert_eq!(cu.auth_mode, AuthMode::DcPat);
+        assert!(cu.email.is_empty() && cu.cloud_id.is_empty());
+    }
+
+    #[test]
+    fn auth_mode_doc_duoc_ca_ba_gia_tri_va_gia_tri_la_ve_dc() {
+        let b: Config = toml::from_str("auth_mode = \"cloud_basic\"").unwrap();
+        assert_eq!(b.auth_mode, AuthMode::CloudBasic);
+        let o: Config = toml::from_str("auth_mode = \"cloud_oauth\"").unwrap();
+        assert_eq!(o.auth_mode, AuthMode::CloudOauth);
+        assert_eq!(AuthMode::from_str_or_dc("cloud_basic"), AuthMode::CloudBasic);
+        assert_eq!(AuthMode::from_str_or_dc("gi do la"), AuthMode::DcPat);
+        assert_eq!(AuthMode::CloudOauth.as_str(), "cloud_oauth");
+    }
+
+    #[test]
+    fn oauth_configured_can_du_ca_client_id_lan_backend_url() {
+        // Chi co y nghia khi may build KHONG dat san MASTERJIRA_OAUTH_* — CI/dev thuong vay.
+        if option_env!("MASTERJIRA_OAUTH_CLIENT_ID").is_some() {
+            return;
+        }
+        let mut c = Config::default();
+        assert!(!c.oauth_configured());
+        c.oauth_client_id = "abc123".into();
+        assert!(!c.oauth_configured(), "thieu backend van chua du");
+        c.oauth_backend_url = "https://proxy.example.com/".into();
+        assert!(c.oauth_configured());
+        assert_eq!(
+            c.oauth_backend_url().unwrap(),
+            "https://proxy.example.com",
+            "phai cat dau / cuoi"
+        );
     }
 
     #[test]

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Progress, PointTotals } from "../types";
   import { fmtNum } from "../types";
+  import { t } from "../i18n.svelte";
 
   let {
     progress,
@@ -23,24 +24,24 @@
   // "Cho release" tach rieng khoi "Xong" vi Jira xep no vao category Done
   // nhung thuc te ticket moi chi dang cho duyet release.
   let stages = $derived([
-    { key: "closed", label: "Xong", n: progress.closed, color: "var(--stage-closed)" },
-    { key: "release", label: "Cho release", n: progress.pendingRelease, color: "var(--stage-release)" },
-    { key: "wip", label: "Dang lam", n: progress.inProgress, color: "var(--stage-wip)" },
-    { key: "todo", label: "Chua lam", n: progress.todo, color: "var(--stage-todo)" },
+    { key: "closed", label: t("stDone"), n: progress.closed, color: "var(--stage-closed)" },
+    { key: "release", label: t("stRelease"), n: progress.pendingRelease, color: "var(--stage-release)" },
+    { key: "wip", label: t("stWip"), n: progress.inProgress, color: "var(--stage-wip)" },
+    { key: "todo", label: t("stTodo"), n: progress.todo, color: "var(--stage-todo)" },
   ].filter((s) => s.n > 0));
 </script>
 
 <div class="section">
   <div class="section-head">
-    <span class="section-title">{onlyMe ? "Của tôi" : "Tiến độ"}</span>
-    <span class="headline num">
+    <span class="section-title">{onlyMe ? t("mine") : t("progress")}</span>
+    <span class="headline">
       {progress.done}/{progress.total} · {progress.percent}%
     </span>
   </div>
 
   {#if boiCanh}
     <p class="context num">
-      cả sprint {boiCanh.done}/{boiCanh.total} · {boiCanh.percent}%
+      {t("ctxSprint", { d: boiCanh.done, t: boiCanh.total, p: boiCanh.percent })}
     </p>
   {/if}
 
@@ -48,7 +49,7 @@
   <div
     class="track"
     role="img"
-    aria-label="{progress.done} tren {progress.total} ticket da o trang thai Done"
+    aria-label={t("progressAria", { d: progress.done, t: progress.total })}
   >
     {#each stages as s (s.key)}
       <span
@@ -87,25 +88,25 @@
         <!-- O Only Me hang nay la tong CUA MINH, khong phai ca sprint: `points`
              duoc tinh duoi moc loc. De nguyen chu "cả sprint" thi no da voi
              dong bối cảnh ngay phia tren — hai con so khac nhau cung mot nhan. -->
-        <td class="scope">{onlyMe ? "của tôi" : "cả sprint"}</td>
+        <td class="scope">{onlyMe ? t("scopeMine") : t("scopeSprint")}</td>
         <td class="num">
           <b>{fmtNum(points.sprint.spSum)}</b>
-          <span class="muted">{points.sprint.spFilled}/{points.sprint.denominator}</span>
+          <span class="den">{points.sprint.spFilled}/{points.sprint.denominator}</span>
         </td>
         <td class="num">
           <b>{fmtNum(points.sprint.scoreSum)}</b>
-          <span class="muted">{points.sprint.scoreFilled}/{points.sprint.denominator}</span>
+          <span class="den">{points.sprint.scoreFilled}/{points.sprint.denominator}</span>
         </td>
       </tr>
       <tr>
-        <td class="scope">chưa xong</td>
+        <td class="scope">{t("scopeOpen")}</td>
         <td class="num">
           {fmtNum(points.open.spSum)}
-          <span class="muted">{points.open.spFilled}/{points.open.denominator}</span>
+          <span class="den">{points.open.spFilled}/{points.open.denominator}</span>
         </td>
         <td class="num">
           {fmtNum(points.open.scoreSum)}
-          <span class="muted">{points.open.scoreFilled}/{points.open.denominator}</span>
+          <span class="den">{points.open.scoreFilled}/{points.open.denominator}</span>
         </td>
       </tr>
     </tbody>
@@ -113,25 +114,19 @@
 </div>
 
 <style>
-  .headline {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
   /* Boi canh la thong tin phu -> muted, nam duoi con so chinh chu khong
      canh tranh voi no. */
   .context {
-    margin: -2px 0 6px;
+    margin: -3px 0 7px;
     font-size: 9.5px;
     color: var(--text-muted);
   }
 
   .track {
     display: flex;
-    gap: 2px;
+    gap: var(--sp-xs);
     height: 8px;
-    margin-bottom: 7px;
+    margin-bottom: var(--sp-lg);
   }
   .seg {
     display: block;
@@ -139,39 +134,39 @@
   }
   /* dau mut bo tron o hai dau thanh, cac doan giua vuong */
   .seg:first-child {
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--r-sm) 0 0 var(--r-sm);
   }
   .seg:last-child {
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
   }
   .seg:only-child {
-    border-radius: 4px;
+    border-radius: var(--r-sm);
   }
 
   .legend {
     list-style: none;
-    margin: 0 0 7px;
+    margin: 0 0 9px;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 3px 10px;
+    gap: var(--sp-sm) var(--sp-xl);
     font-size: 10px;
   }
   .legend li {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
   }
   .sw {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 2px;
   }
   .lb {
     color: var(--text-secondary);
   }
   .n {
-    font-weight: 600;
+    font-weight: 640;
     color: var(--text-primary);
   }
 
@@ -187,13 +182,16 @@
     font-weight: 500;
     color: var(--text-muted);
     text-align: right;
-    padding-bottom: 1px;
+    padding-bottom: 3px;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   .points th:first-child {
     text-align: left;
   }
   .points td {
-    padding: 1px 0;
+    padding: 2px 0;
     text-align: right;
   }
   .points td.scope {
@@ -203,8 +201,9 @@
   .points b {
     color: var(--text-primary);
   }
-  .points .muted {
-    margin-left: 4px;
+  .points .den {
+    margin-left: 5px;
     font-size: 9px;
+    color: var(--text-muted);
   }
 </style>

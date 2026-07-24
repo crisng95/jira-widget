@@ -31,7 +31,7 @@
   <div class="section">
     <div class="section-head">
       <span class="section-title">{mine ? titleMine : titleAll}</span>
-      <span class="count-pill">{queue.items.length}</span>
+      <span class="count-pill num">{queue.items.length}</span>
     </div>
 
     {#if queue.items.length === 0}
@@ -41,7 +41,6 @@
         {#each queue.items as issue (issue.key)}
           <TicketRow
             {issue}
-            showStatus={true}
             color={issue.assignee ? colors.get(issue.assignee) : null}
           />
         {/each}

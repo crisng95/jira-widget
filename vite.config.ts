@@ -16,10 +16,11 @@ export default defineConfig({
     minify: "oxc",
     sourcemap: false,
     rollupOptions: {
-      // Hai trang: panel (index) va cua so cai dat (settings).
+      // Ba trang: panel (index), cua so cai dat (settings), wizard (onboarding).
       input: {
         index: "index.html",
         settings: "settings.html",
+        onboarding: "onboarding.html",
       },
     },
   },

@@ -24,7 +24,10 @@ toml = "0.8"
 # default TLS = native-tls -> dung Security.framework cua macOS,
 # khong can OpenSSL. Cert Jira la GlobalSign hop le nen GIU verification nghiem ngat.
 reqwest = { version = "0.12", features = ["json"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+# net + io-util: loopback listener nhan OAuth callback (oauth.rs)
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync", "net", "io-util"] }
+# nonce cho tham so `state` cua OAuth — chong CSRF tren cong loopback
+getrandom = "0.2"
 chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1"
 log = "0.4"

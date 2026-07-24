@@ -158,6 +158,8 @@ export interface PanelState {
   noActiveSprint: boolean;
   pollIntervalSecs: number;
   staleDays: number;
+  /** "vi" | "en" — de panel chon dung bo chuoi ngay tu lan render dau */
+  language: string;
 }
 
 /** Thu tu co dinh — mau bam theo NGUOI, khong bam theo thu hang.
@@ -202,23 +204,17 @@ export function colorMap(colorOrder: string[]): Map<string, string> {
 
 export const OTHER_COLOR = "var(--baseline)";
 
-export function fmtCountdown(secs: number | null): string {
-  if (secs === null) return "—";
-  const past = secs < 0;
-  let s = Math.abs(secs);
-  const d = Math.floor(s / 86400);
-  s -= d * 86400;
-  const h = Math.floor(s / 3600);
-  s -= h * 3600;
-  const m = Math.floor(s / 60);
-  const body = d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`;
-  return past ? `qua ${body}` : body;
+/** Khoa kieu accountId cua Jira Cloud (GDPR bo username) — ban TS cua
+ *  `la_account_id` ben Rust. Khoa nay chi de tra mau/so khop, KHONG duoc
+ *  hien tho ra giao dien. */
+export function laAccountId(u: string): boolean {
+  return u.includes(":") || (u.length >= 20 && /^[0-9a-fA-F]+$/.test(u));
 }
 
-export function fmtClock(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+/** Nhan hien thi cho mot member: username doc duoc (DC) hay display name
+ *  (Cloud — `name` la accountId tho). Mau va key Svelte van dung `m.name`. */
+export function memberLabel(m: MemberLoad): string {
+  return laAccountId(m.name) ? m.display : m.name;
 }
 
 /** So thap phan gon: 6.5 -> "6.5", 7 -> "7" */

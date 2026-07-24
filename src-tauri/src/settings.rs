@@ -12,12 +12,16 @@
 //!   - CSP chan moi ket noi ra ngoai tu webview nen khong the tuon di dau
 //!   - luu xong la vao Keychain, khong ghi vao config.toml
 
-use crate::config::{self, Config, DisplayMode, NotifyConfig, WindowLayer};
-use crate::jira::JiraClient;
+use crate::config::{self, AuthMode, Config, DisplayMode, NotifyConfig, WindowLayer};
+use crate::jira::{JiraAuth, JiraClient};
+use crate::oauth;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_opener::OpenerExt;
 
 pub const SETTINGS_WINDOW: &str = "settings";
+pub const ONBOARDING_WINDOW: &str = "onboarding";
 
 /// Ban camelCase cua `NotifyConfig` danh RIENG cho IPC.
 ///
@@ -83,9 +87,21 @@ pub struct SettingsDto {
     pub window_layer: String,
     /// "team" | "only_me"
     pub display_mode: String,
+    /// "vi" | "en" — chi de HIEN; doi ngon ngu di qua `set_language`
+    pub language: String,
+    /// "dc_pat" | "cloud_basic" | "cloud_oauth"
+    pub auth_mode: String,
+    /// Email Atlassian — chi dung o cloud_basic
+    pub email: String,
+    /// Cloud ID cua site — chi dung o cloud_oauth
+    pub cloud_id: String,
     pub notify: NotifyDto,
     /// Chi de UI hien "da co token" — khong phai gia tri token
     pub has_token: bool,
+    /// Da co refresh token OAuth trong Keychain (= da dang nhap Atlassian)
+    pub has_oauth: bool,
+    /// Du client_id + backend de hien nut "Login with Atlassian"
+    pub oauth_available: bool,
 }
 
 impl SettingsDto {
@@ -112,8 +128,14 @@ impl SettingsDto {
             // Gui ban DA qua `effective_`: `me` rong thi UI phai thay "Ca team"
             // dung nhu cai panel dang chay, khong phai gia tri chet trong file.
             display_mode: c.effective_display_mode().as_str().into(),
+            language: config::normalize_lang(&c.language).into(),
+            auth_mode: c.auth_mode.as_str().into(),
+            email: c.email.clone(),
+            cloud_id: c.cloud_id.clone(),
             notify: NotifyDto::from(&c.notify),
             has_token,
+            has_oauth: oauth::has_refresh_token(),
+            oauth_available: c.oauth_configured(),
         }
     }
 
@@ -136,8 +158,22 @@ impl SettingsDto {
         if self.stale_days < 0 || self.old_age_days < 0 || self.ending_soon_hours < 0 {
             return Err("Nguong khong duoc am".into());
         }
+        let auth_mode = AuthMode::from_str_or_dc(&self.auth_mode);
+        let email = self.email.trim().to_string();
+        let cloud_id = self.cloud_id.trim().to_string();
+        // Moi mode co mot manh du lieu song con rieng — thieu la 100% request
+        // fail, nen chan ngay tu luc Luu chu khong de panel 401 trong im lang.
+        if auth_mode == AuthMode::CloudBasic && email.is_empty() {
+            return Err("Jira Cloud (API token) can email Atlassian cua ban".into());
+        }
+        if auth_mode == AuthMode::CloudOauth && cloud_id.is_empty() {
+            return Err("Chua chon site Jira Cloud (cloud id rong)".into());
+        }
 
         base.jira_url = url;
+        base.auth_mode = auth_mode;
+        base.email = email;
+        base.cloud_id = cloud_id;
         base.project_key = self.project_key.trim().to_uppercase();
         base.board_id = self.board_id;
         base.me = self.me.trim().to_string();
@@ -156,11 +192,11 @@ impl SettingsDto {
         } else {
             WindowLayer::Desktop
         };
-        // `display_mode` CO TRONG dto nhung KHONG duoc ghi o day. No la thu duy
-        // nhat doi nong duoc, nen radio goi thang `set_display_mode` — cai do
-        // ghi config, dung lai snapshot va dong bo tick tray trong mot nhip.
+        // `display_mode` va `language` CO TRONG dto nhung KHONG duoc ghi o day.
+        // Chung la hai thu doi nong duoc, nen UI goi thang `set_display_mode` /
+        // `set_language` — cac lenh do ghi config va phat event trong mot nhip.
         // Neu ghi ca o day thi: (1) bam "Chi luu" se ghi file mot dang con panel
-        // chay mot neo, va (2) mode vua doi tu tray se bi form cu ghi de nguoc.
+        // chay mot neo, va (2) gia tri vua doi nong se bi form cu ghi de nguoc.
         base.notify = self.notify.into();
         Ok(base)
     }
@@ -204,7 +240,7 @@ pub fn open_window(app: &tauri::AppHandle) {
         SETTINGS_WINDOW,
         WebviewUrl::App("settings.html".into()),
     )
-    .title("Jira Widget — Cai dat")
+    .title("Master Jira — Cai dat")
     .inner_size(560.0, 600.0)
     .min_inner_size(500.0, 440.0)
     .resizable(true)
@@ -216,6 +252,36 @@ pub fn open_window(app: &tauri::AppHandle) {
     {
         Ok(_) => log::info!("mo cua so cai dat"),
         Err(e) => log::error!("khong mo duoc cua so cai dat: {e}"),
+    }
+}
+
+/// Wizard chao mung lan dau. Cung mot kieu cua so binh thuong nhu Cai dat,
+/// nhung dan loi tung buoc va khoa nut "Tiep" cho toi khi buoc do hop le —
+/// nguoi dung cu da du thong tin thi khong bao gio thay no.
+pub fn open_onboarding(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window(ONBOARDING_WINDOW) {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+        return;
+    }
+    match WebviewWindowBuilder::new(
+        app,
+        ONBOARDING_WINDOW,
+        WebviewUrl::App("onboarding.html".into()),
+    )
+    .title("Master Jira")
+    .inner_size(560.0, 640.0)
+    .min_inner_size(520.0, 560.0)
+    .resizable(true)
+    .focused(true)
+    .decorations(true)
+    .always_on_top(false)
+    .center()
+    .build()
+    {
+        Ok(_) => log::info!("mo wizard onboarding"),
+        Err(e) => log::error!("khong mo duoc wizard onboarding: {e}"),
     }
 }
 
@@ -265,29 +331,145 @@ pub fn settings_clear_token() -> Result<(), String> {
     Ok(())
 }
 
-/// Kiem tra ket noi bang chinh cai URL + token dang co.
+/// Dung client TAM cho cac lenh tham do (test / tim board / liet ke status)
+/// theo dung mode + du lieu vua go tren form ma CHUA luu.
 ///
-/// `token_override` cho phep thu token vua go MA CHUA luu — nguoi dung biet
-/// token dung hay sai truoc khi ghi de cai cu.
+/// `token_override` cho phep thu token moi truoc khi ghi de cai cu; khong co
+/// thi rot ve token da luu. OAuth thi luon di bang refresh token trong Keychain.
+async fn probe_client(
+    jira_url: &str,
+    auth_mode: Option<String>,
+    email: Option<String>,
+    token_override: Option<String>,
+    cloud_id: Option<String>,
+) -> Result<JiraClient, String> {
+    let cfg = config::load().map_err(|e| e.to_string())?;
+    let mode = auth_mode
+        .map(|m| AuthMode::from_str_or_dc(&m))
+        .unwrap_or(cfg.auth_mode);
+    let base = jira_url.trim().trim_end_matches('/').to_string();
+
+    let override_token = token_override
+        .map(|t| t.trim().to_string())
+        .filter(|t| !t.is_empty());
+
+    // Hang rao confused-deputy: token DA LUU chi duoc gan vao request toi dung
+    // host da luu. URL do webview dua sang — neu bi chiem quyen, mot cu invoke
+    // voi jiraUrl=evil.com se gui thang PAT/API-token cho ke tan cong (request
+    // di tu Rust nen CSP cua webview khong che duoc). Token vua go tay thi cho
+    // host tuy y — do la luong "thu URL moi bang token moi" cua wizard.
+    let stored_or_override = |ovr: Option<String>| -> Result<String, String> {
+        match ovr {
+            Some(t) => Ok(t),
+            None => {
+                if !crate::jira::same_origin(&base, cfg.jira_url.trim_end_matches('/')) {
+                    return Err(format!(
+                        "URL khác với cấu hình đã lưu ({}) — token đã lưu không được gửi \
+                         tới host khác. Muốn thử host mới thì dán token vào ô token.",
+                        cfg.jira_url
+                    ));
+                }
+                config::resolve_token(&cfg).map_err(|e| e.to_string())
+            }
+        }
+    };
+
+    match mode {
+        AuthMode::DcPat => {
+            let token = stored_or_override(override_token)?;
+            JiraClient::new(&base, None, JiraAuth::Pat(token)).map_err(|e| e.to_string())
+        }
+        AuthMode::CloudBasic => {
+            let token = stored_or_override(override_token)?;
+            let email = email
+                .map(|e| e.trim().to_string())
+                .filter(|e| !e.is_empty())
+                .or_else(|| Some(cfg.email.clone()).filter(|e| !e.trim().is_empty()))
+                .ok_or("Jira Cloud (API token) can email Atlassian cua ban")?;
+            JiraClient::new(&base, None, JiraAuth::Basic { email, token })
+                .map_err(|e| e.to_string())
+        }
+        AuthMode::CloudOauth => {
+            let cid = cloud_id
+                .map(|c| c.trim().to_string())
+                .filter(|c| !c.is_empty())
+                .unwrap_or_else(|| cfg.cloud_id.clone());
+            if cid.trim().is_empty() {
+                return Err("Chua chon site Jira Cloud".into());
+            }
+            // Store DUNG CHUNG — moi instance rieng se rotate chet refresh
+            // token cua poller (refresh token Atlassian dung mot lan).
+            let store = oauth::shared_store(&cfg).map_err(|e| e.to_string())?;
+            JiraClient::new(&base, Some(oauth::api_base_for(&cid)), JiraAuth::Oauth(store))
+                .map_err(|e| e.to_string())
+        }
+    }
+}
+
+fn whoami_of(me: crate::jira::RawUser) -> WhoAmI {
+    // `name` o day la KHOA dinh danh de dien vao `me` — tren Cloud chinh la
+    // accountId (GDPR bo username), tren DC la username nhu cu.
+    let key = me.username().unwrap_or_default();
+    WhoAmI {
+        display_name: me.display_name.unwrap_or_else(|| key.clone()),
+        name: key,
+    }
+}
+
+/// Kiem tra ket noi bang chinh cai URL + credential dang co tren form.
 #[tauri::command]
 pub async fn settings_test_connection(
     jira_url: String,
+    auth_mode: Option<String>,
+    email: Option<String>,
     token_override: Option<String>,
+    cloud_id: Option<String>,
 ) -> Result<WhoAmI, String> {
-    let token = match token_override.map(|t| t.trim().to_string()).filter(|t| !t.is_empty()) {
-        Some(t) => t,
-        None => {
-            let cfg = config::load().map_err(|e| e.to_string())?;
-            config::resolve_token(&cfg).map_err(|e| e.to_string())?
-        }
-    };
-    let client =
-        JiraClient::new(jira_url.trim().trim_end_matches('/'), token).map_err(|e| e.to_string())?;
+    let client = probe_client(&jira_url, auth_mode, email, token_override, cloud_id).await?;
     let me = client.myself().await.map_err(|e| e.to_string())?;
-    Ok(WhoAmI {
-        name: me.name.clone().unwrap_or_default(),
-        display_name: me.display_name.unwrap_or_else(|| me.name.unwrap_or_default()),
+    Ok(whoami_of(me))
+}
+
+// ------------------------------------------------------------- OAuth (3LO)
+
+/// Mo browser dang nhap Atlassian, cho callback, doi token, tra ve danh sach
+/// site de UI chon. Refresh token da nam trong Keychain khi lenh nay tra Ok.
+#[tauri::command]
+pub async fn oauth_begin(app: tauri::AppHandle) -> Result<oauth::LoginResult, String> {
+    let cfg = config::load().map_err(|e| e.to_string())?;
+    let opener = app.clone();
+    oauth::login(&cfg, move |url| {
+        opener
+            .opener()
+            .open_url(url, None::<&str>)
+            .map_err(|e| anyhow::anyhow!("khong mo duoc browser: {e}"))
     })
+    .await
+    .map_err(|e| format!("{e:#}"))
+}
+
+/// Toi la ai tren site vua chon — dung refresh token vua luu de lay access
+/// token moi (dong thoi kiem chung ca duong refresh ngay tu dau).
+#[tauri::command]
+pub async fn oauth_whoami(cloud_id: String) -> Result<WhoAmI, String> {
+    let cfg = config::load().map_err(|e| e.to_string())?;
+    // Store dung chung: login() vua install access token vao day roi, nen
+    // lenh nay thuong khong ton them mot luot refresh nao.
+    let store = oauth::shared_store(&cfg).map_err(|e| e.to_string())?;
+    let client = JiraClient::new(
+        "https://api.atlassian.com",
+        Some(oauth::api_base_for(&cloud_id)),
+        JiraAuth::Oauth(store),
+    )
+    .map_err(|e| e.to_string())?;
+    let me = client.myself().await.map_err(|e| e.to_string())?;
+    Ok(whoami_of(me))
+}
+
+/// Dang xuat Atlassian: xoa refresh token khoi Keychain lan trong RAM.
+#[tauri::command]
+pub async fn oauth_logout() -> Result<(), String> {
+    oauth::logout().await.map_err(|e| e.to_string())
 }
 
 /// Status that su co trong workflow cua project — cho o chon trong Settings.
@@ -298,21 +480,16 @@ pub async fn settings_test_connection(
 pub async fn settings_project_statuses(
     jira_url: String,
     project_key: String,
+    auth_mode: Option<String>,
+    email: Option<String>,
     token_override: Option<String>,
+    cloud_id: Option<String>,
 ) -> Result<Vec<String>, String> {
     let key = project_key.trim().to_uppercase();
     if key.is_empty() {
         return Err("Nhap project key truoc (vd PROJ)".into());
     }
-    let token = match token_override.map(|t| t.trim().to_string()).filter(|t| !t.is_empty()) {
-        Some(t) => t,
-        None => {
-            let cfg = config::load().map_err(|e| e.to_string())?;
-            config::resolve_token(&cfg).map_err(|e| e.to_string())?
-        }
-    };
-    let client =
-        JiraClient::new(jira_url.trim().trim_end_matches('/'), token).map_err(|e| e.to_string())?;
+    let client = probe_client(&jira_url, auth_mode, email, token_override, cloud_id).await?;
     client.project_statuses(&key).await.map_err(|e| e.to_string())
 }
 
@@ -320,23 +497,18 @@ pub async fn settings_project_statuses(
 pub async fn settings_list_boards(
     jira_url: String,
     project_key: String,
+    auth_mode: Option<String>,
+    email: Option<String>,
     token_override: Option<String>,
+    cloud_id: Option<String>,
 ) -> Result<Vec<BoardDto>, String> {
     let key = project_key.trim().to_uppercase();
     if key.is_empty() {
         return Err("Nhap project key truoc (vd PROJ)".into());
     }
-    // Cho dung token vua go ma chua bam Luu — neu khong thi lan dau cai dat
-    // se ket: chua luu token thi khong tim duoc board.
-    let token = match token_override.map(|t| t.trim().to_string()).filter(|t| !t.is_empty()) {
-        Some(t) => t,
-        None => {
-            let cfg = config::load().map_err(|e| e.to_string())?;
-            config::resolve_token(&cfg).map_err(|e| e.to_string())?
-        }
-    };
-    let client =
-        JiraClient::new(jira_url.trim().trim_end_matches('/'), token).map_err(|e| e.to_string())?;
+    // Cho dung credential vua go ma chua bam Luu — neu khong thi lan dau cai
+    // dat se ket: chua luu token thi khong tim duoc board.
+    let client = probe_client(&jira_url, auth_mode, email, token_override, cloud_id).await?;
     let boards = client.list_boards(&key).await.map_err(|e| e.to_string())?;
     Ok(boards
         .into_iter()
@@ -355,6 +527,12 @@ pub async fn settings_list_boards(
 /// dung chac chan, khong co truong hop nua-cu-nua-moi.
 #[tauri::command]
 pub fn settings_apply_restart(app: tauri::AppHandle) {
+    // Hien panel truoc khi thoat: plugin window-state luu ca trang thai an/hien,
+    // ma duong nay chay xong la nguoi dung mong THAY panel voi cau hinh moi —
+    // dac biet la sau wizard onboarding (luc do panel dang bi dau di).
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.show();
+    }
     log::info!("khoi dong lai de ap dung cai dat");
     app.restart();
 }
@@ -364,6 +542,23 @@ pub fn settings_close(app: tauri::AppHandle) {
     if let Some(w) = app.get_webview_window(SETTINGS_WINDOW) {
         let _ = w.close();
     }
+}
+
+/// Ket thuc wizard: chot display_mode xuong dia roi khoi dong lai.
+///
+/// KHONG dung `set_display_mode` o day: lenh do doi chieu voi `state.cfg.me`
+/// cua PHIEN DANG CHAY — luc onboarding `me` con rong (wizard vua ghi config
+/// xong nhung app chua nap lai), nen "only_me" se bi tu choi oan. Ghi thang
+/// xuong file la du: sau restart `effective_display_mode()` tu bao ve truong
+/// hop me rong roi.
+#[tauri::command]
+pub fn onboarding_finish(app: tauri::AppHandle, mode: String) -> Result<(), String> {
+    let mut cfg = config::load().map_err(|e| e.to_string())?;
+    cfg.display_mode = DisplayMode::from_str_or_team(&mode);
+    config::save(&cfg).map_err(|e| e.to_string())?;
+    log::info!("wizard xong — mode {}, khoi dong lai", cfg.display_mode.as_str());
+    settings_apply_restart(app);
+    Ok(())
 }
 
 #[cfg(test)]
@@ -508,6 +703,51 @@ mod tests {
             DisplayMode::OnlyMe,
             "mode dang chay phai thang form cu"
         );
+    }
+
+    #[test]
+    fn cloud_basic_bat_buoc_email_va_cloud_oauth_bat_buoc_cloud_id() {
+        let mut d = dto();
+        d.auth_mode = "cloud_basic".into();
+        d.email = "  ".into();
+        assert!(d.merge_into(Config::default()).is_err(), "Basic khong email la 401 chac chan");
+
+        let mut d2 = dto();
+        d2.auth_mode = "cloud_basic".into();
+        d2.email = "a@b.com".into();
+        let m = d2.merge_into(Config::default()).unwrap();
+        assert_eq!(m.auth_mode, AuthMode::CloudBasic);
+        assert_eq!(m.email, "a@b.com");
+
+        let mut d3 = dto();
+        d3.auth_mode = "cloud_oauth".into();
+        d3.cloud_id = String::new();
+        assert!(d3.merge_into(Config::default()).is_err());
+
+        let mut d4 = dto();
+        d4.auth_mode = "cloud_oauth".into();
+        d4.cloud_id = " abc-123 ".into();
+        let m4 = d4.merge_into(Config::default()).unwrap();
+        assert_eq!(m4.auth_mode, AuthMode::CloudOauth);
+        assert_eq!(m4.cloud_id, "abc-123");
+
+        // Mode la thi ve DC — khong panic, khong chan nguoi dung cu.
+        let mut d5 = dto();
+        d5.auth_mode = "gi do la".into();
+        assert_eq!(d5.merge_into(Config::default()).unwrap().auth_mode, AuthMode::DcPat);
+    }
+
+    #[test]
+    fn luu_cai_dat_khong_duoc_dong_vao_language() {
+        // Ngon ngu doi nong qua `set_language`, giong display_mode. Form cu
+        // khong duoc phep keo language ve gia tri luc mo cua so.
+        let mut base = Config::default();
+        base.language = "en".into();
+
+        let mut d = dto();
+        d.language = "vi".into();
+
+        assert_eq!(d.merge_into(base).unwrap().language, "en");
     }
 
     #[test]

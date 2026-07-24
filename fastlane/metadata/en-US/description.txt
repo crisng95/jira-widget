@@ -1,0 +1,30 @@
+Your active sprint, always in sight.
+
+Master Jira pins a compact, glanceable panel to your desktop showing the live state of your team's active sprint — no browser tab, no context switching. It refreshes every 60 seconds and taps you on the shoulder only when something actually changes.
+
+BUILT FOR TEAM LEADS
+• Sprint progress at a glance — done vs. total, story points with explicit denominators, and "pending release" split out from truly done
+• Risk alerts — stale tickets nobody has touched, sprint ending soon, long-lived tickets
+• Handover queues — Ready for Review, waiting for your approval, waiting for release
+• Team load — per-member progress bars and a workload donut for the whole sprint
+• Native notifications — status changes, reassignments, tickets added to or pulled from the sprint; bursts are grouped into a single summary
+
+ONE PANEL, TWO VIEWS
+Switch between "whole team" and "only my tickets" from the menu bar. The panel re-filters instantly from the latest data — numbers, alerts and the menu-bar badge all follow.
+
+STAYS OUT OF YOUR WAY
+• Desktop mode: the panel sits with your desktop wallpaper, under every window — visible when you glance at the desktop, never covering your work. Or switch to floating mode to keep it always on top.
+• Menu-bar app with start-at-login, compact mode and one-click refresh.
+• Click any ticket to open it in your browser.
+
+PRIVATE BY DESIGN
+• Read-only: the app never writes anything to Jira
+• Your Personal Access Token is stored in the macOS Keychain and never leaves your Mac
+• Talks only to the Jira server you configure — no analytics, no tracking, no third-party servers
+
+REQUIREMENTS
+• Jira Server or Data Center 8.14 or later (Personal Access Tokens). Jira Cloud is not supported yet.
+• A Jira account with permission to view the board you follow.
+• English and Vietnamese interface.
+
+Jira is a registered trademark of Atlassian Pty Ltd. This app is an independent product and is not affiliated with, endorsed by, or sponsored by Atlassian.
