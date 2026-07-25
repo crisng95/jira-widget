@@ -9,6 +9,16 @@ Panel không ghi gì lên Jira — chỉ đọc.
   <img src="docs/panel.png" alt="Widget for Jira — panel hiển thị active sprint trên desktop macOS" width="360">
 </p>
 
+## Ảnh màn hình
+
+*(demo với dữ liệu hư cấu — project NOVA; bản 1.0.0 đã nộp Mac App Store)*
+
+| | |
+|---|---|
+| ![Panel cạnh ticket đang mở trong browser](docs/screenshots/01-hero.png) | ![Hàng chờ duyệt + nút Approve trên Jira web](docs/screenshots/02-approve.png) |
+| ![Panel xếp cạnh widget mặc định của Apple](docs/screenshots/03-widgets.png) | ![Thông báo native khi sprint thay đổi](docs/screenshots/04-notify.png) |
+| ![Từ tín hiệu trên panel tới Claude Code](docs/screenshots/05-claude-code.png) | |
+
 ---
 
 ## Cài đặt bằng file .dmg (khuyên dùng)

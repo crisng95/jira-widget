@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Mac App Store bat buoc App Sandbox -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- HTTPS toi Jira host nguoi dung cau hinh + OAuth loopback -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array/>
+	<key>com.apple.application-identifier</key>
+	<string>MVZQJ4M3LF.com.isemi.jiraw</string>
+	<key>com.apple.developer.team-identifier</key>
+	<string>MVZQJ4M3LF</string>
+</dict>
+</plist>

@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App Store screenshots — Widget for Jira (render nguồn)</title>
+<!-- Trang NGUỒN để render screenshot ASC 2880×1800 (không deploy).
+     Chạy: python3 -m http.server 8901 (từ repo root) rồi node scratchpad script
+     playwright chụp từng .shot với deviceScaleFactor 2.
+     Tái dùng nguyên design system + scene CSS của landing qua class .desktop-mock. -->
+<link rel="stylesheet" href="/site/styles.css">
+<style>
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  body { background: #101012; margin: 0; }
+  .shot {
+    width: 1440px; height: 900px; position: relative; overflow: hidden;
+    margin: 40px auto;
+  }
+  .shot.desktop-mock { aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; }
+  /* caption lon cho store — de len wallpaper, khong che panel */
+  .cap { position: absolute; z-index: 8; left: 64px; top: 78px; max-width: 660px; color: #fff; }
+  .cap h2 {
+    font: 800 62px/1.08 -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    letter-spacing: -0.03em; color: #fff; text-wrap: balance;
+    text-shadow: 0 2px 30px rgba(8, 18, 40, 0.5);
+  }
+  .cap p {
+    margin-top: 16px; max-width: 560px;
+    font: 500 23px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 16px rgba(8, 18, 40, 0.45);
+  }
+  .cap .price {
+    display: inline-block; margin-top: 22px;
+    font: 600 20px/1 ui-monospace, "SF Mono", Menlo, monospace;
+    color: #fff; background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 12px; padding: 12px 20px;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SHOT 1 · hero: panel + ticket dang mo ============ -->
+<div class="shot desktop-mock" id="s1">
+  <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="right">Wed 9:41</span></div>
+  <div class="cap">
+    <h2>Your active sprint, always in sight.</h2>
+    <p>A read-only panel pinned to your desktop — progress, risks, queues and team load, refreshed every 60 seconds.</p>
+  </div>
+
+  <div class="panel-replica">
+    <div class="p-scroll">
+      <div class="p-head"><span>Sprint 24 Jul</span><span class="count">9h 42m</span></div>
+      <p class="p-sub"><i>●</i>updated 10:06</p>
+      <div class="p-sec">
+        <h4>Alerts <span class="pill">8</span></h4>
+        <div class="p-row row-1999"><i class="d red"></i><span class="key">NOVA-1999</span><span class="st">Open</span><span class="who">jordan.lee</span><span class="age">17d</span></div>
+        <div class="p-row"><i class="d pink"></i><span class="key">NOVA-2054</span><span class="st">In Test</span><span class="who">sam.rivera</span><span class="age">8d</span></div>
+        <div class="p-row"><i class="d amber"></i><span class="st">Not done, sprint ending soon</span><span class="who">6</span></div>
+      </div>
+      <div class="p-sec p-progress">
+        <h4>Progress <span class="pill p-num">42/48 · 88%</span></h4>
+        <div class="bar"><i class="f1"></i><i class="f2"></i></div>
+        <div class="legend"><span><b>42</b> done</span><span><b>5</b> doing</span><span><b>1</b> to do</span></div>
+      </div>
+      <div class="p-sec">
+        <h4>Allocation <span class="pill">48</span></h4>
+        <div class="p-alloc">
+          <div class="donut"></div>
+          <div class="leg">
+            <span><i style="background:#ffd166"></i>alex.kim <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#4cd964"></i>jordan.lee <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#e0568f"></i>casey.park <span class="pct p-num">9 · 19%</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="p-sec">
+        <h4>By member <span class="pill p-num">42/48</span></h4>
+        <div class="p-mem">
+          <div class="m"><div class="l1"><b>alex.kim</b><span class="ok p-num">10/10 ✓</span></div><div class="mb"><i style="width:100%"></i></div></div>
+          <div class="m"><div class="l1"><b>jordan.lee</b><span class="p-num">6/9 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+          <div class="m"><div class="l1"><b>casey.park</b><span class="p-num">5/6 · 83%</span></div><div class="mb"><i style="width:83%"></i></div></div>
+          <div class="m"><div class="l1"><b>sam.rivera</b><span class="p-num">4/6 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+        </div>
+      </div>
+      <div class="p-sec p-approve">
+        <h4>Needs my approval <span class="pill">1</span></h4>
+        <div class="p-row row-214"><i class="d blue"></i><span class="key">NOVA-214</span><span class="st">Ready for Review</span><span class="who">alex.kim</span></div>
+      </div>
+      <div class="p-sec">
+        <h4>Pending release <span class="pill">0</span></h4>
+        <p class="p-empty">Nothing waiting.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-window" style="top:36%;height:56%">
+    <div class="bar"><span class="dot-w r"></span><span class="dot-w y"></span><span class="dot-w g"></span><span class="urlbar">yourteam.atlassian.net/browse/NOVA-1999</span></div>
+    <div class="bpage p-ticket" style="opacity:1">
+      <p class="crumb">Projects / NOVA board / NOVA-1999</p>
+      <div class="thead">
+        <h5>Payment retry flow drops silently</h5>
+        <div class="actions"><span class="ghost-btn">Watching · 3</span></div>
+      </div>
+      <div class="chips"><span class="chip type">Bug</span><span class="chip open">Open</span></div>
+      <div class="b-cols">
+        <div class="b-main">
+          <h6>Description</h6>
+          <p>When a retry hits a 5xx from the payment gateway, the job exits without re-queueing — orders sit at "pending" with no alert.</p>
+          <p>Expected: exponential backoff ×3, then surface a failure event to the ops channel.</p>
+          <h6>Activity</h6>
+          <div class="cmt"><span class="av cp">CP</span><div class="cmt-body"><b>casey.park</b><span class="when">17 days ago</span><p>Repro'd on staging with a forced gateway timeout — attaching logs.</p></div></div>
+        </div>
+        <div class="b-side">
+          <h6>Details</h6>
+          <div class="side-row"><span class="sl">Assignee</span><span class="sv">jordan.lee</span></div>
+          <div class="side-row"><span class="sl">Reporter</span><span class="sv">casey.park</span></div>
+          <div class="side-row"><span class="sl">Priority</span><span class="sv hi">High</span></div>
+          <div class="side-row"><span class="sl">Sprint</span><span class="sv">Sprint 24 Jul</span></div>
+          <div class="side-row"><span class="sl">Story points</span><span class="sv">5</span></div>
+          <div class="side-row"><span class="sl">Updated</span><span class="sv hi">17 days ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- ============ SHOT 2 · approval: queue + Approve tren Jira web ============ -->
+<div class="shot desktop-mock" id="s2">
+  <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="right">Wed 9:41</span></div>
+  <div class="cap">
+    <h2>Approve what waits for you.</h2>
+    <p>Role-based queues — waiting for test, for your approval, for release — so nothing sits unnoticed.</p>
+  </div>
+
+  <div class="panel-replica">
+    <div class="p-scroll" style="transform:translateY(-11em)">
+      <div class="p-head"><span>Sprint 24 Jul</span><span class="count">9h 42m</span></div>
+      <p class="p-sub"><i>●</i>updated 10:06</p>
+      <div class="p-sec">
+        <h4>Alerts <span class="pill">8</span></h4>
+        <div class="p-row row-1999"><i class="d red"></i><span class="key">NOVA-1999</span><span class="st">Open</span><span class="who">jordan.lee</span><span class="age">17d</span></div>
+        <div class="p-row"><i class="d pink"></i><span class="key">NOVA-2054</span><span class="st">In Test</span><span class="who">sam.rivera</span><span class="age">8d</span></div>
+        <div class="p-row"><i class="d amber"></i><span class="st">Not done, sprint ending soon</span><span class="who">6</span></div>
+      </div>
+      <div class="p-sec p-progress">
+        <h4>Progress <span class="pill p-num">42/48 · 88%</span></h4>
+        <div class="bar"><i class="f1"></i><i class="f2"></i></div>
+        <div class="legend"><span><b>42</b> done</span><span><b>5</b> doing</span><span><b>1</b> to do</span></div>
+      </div>
+      <div class="p-sec">
+        <h4>Allocation <span class="pill">48</span></h4>
+        <div class="p-alloc">
+          <div class="donut"></div>
+          <div class="leg">
+            <span><i style="background:#ffd166"></i>alex.kim <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#4cd964"></i>jordan.lee <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#e0568f"></i>casey.park <span class="pct p-num">9 · 19%</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="p-sec">
+        <h4>By member <span class="pill p-num">42/48</span></h4>
+        <div class="p-mem">
+          <div class="m"><div class="l1"><b>alex.kim</b><span class="ok p-num">10/10 ✓</span></div><div class="mb"><i style="width:100%"></i></div></div>
+          <div class="m"><div class="l1"><b>jordan.lee</b><span class="p-num">6/9 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+          <div class="m"><div class="l1"><b>casey.park</b><span class="p-num">5/6 · 83%</span></div><div class="mb"><i style="width:83%"></i></div></div>
+          <div class="m"><div class="l1"><b>sam.rivera</b><span class="p-num">4/6 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+        </div>
+      </div>
+      <div class="p-sec p-approve">
+        <h4>Needs my approval <span class="pill">1</span></h4>
+        <div class="p-row row-214" style="background:rgba(85,152,231,0.22)"><i class="d blue"></i><span class="key">NOVA-214</span><span class="st">Ready for Review</span><span class="who">alex.kim</span></div>
+      </div>
+      <div class="p-sec">
+        <h4>Pending release <span class="pill">0</span></h4>
+        <p class="p-empty">Nothing waiting.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-window" style="top:36%;height:56%">
+    <div class="bar"><span class="dot-w r"></span><span class="dot-w y"></span><span class="dot-w g"></span><span class="urlbar">yourteam.atlassian.net/browse/NOVA-214</span></div>
+    <div class="bpage p-review" style="opacity:1">
+      <p class="crumb">Projects / NOVA board / NOVA-214</p>
+      <div class="thead">
+        <h5>Sprint report export</h5>
+        <div class="actions"><span class="ghost-btn">Request changes</span><span class="approve-btn"><span class="t-ap">Approve</span><span class="t-ok">Approved ✓</span></span></div>
+      </div>
+      <div class="chips"><span class="chip type">Story</span><span class="chip review">Ready for Review</span></div>
+      <div class="b-cols">
+        <div class="b-main">
+          <h6>Description</h6>
+          <p>Adds CSV and PDF export to the sprint report. Columns follow the board settings; totals match the panel's math.</p>
+          <h6>Review checklist</h6>
+          <ul class="checks-mini">
+            <li>Unit tests green — 128 passed</li>
+            <li>QA sign-off on build 1.4.2 — sam.rivera</li>
+            <li>Docs updated — export formats</li>
+          </ul>
+          <h6>Activity</h6>
+          <div class="cmt"><span class="av sr">SR</span><div class="cmt-body"><b>sam.rivera</b><span class="when">2 hours ago</span><p>Tested export on three boards — totals match everywhere. Over to you.</p></div></div>
+        </div>
+        <div class="b-side">
+          <h6>Details</h6>
+          <div class="side-row"><span class="sl">Assignee</span><span class="sv">alex.kim</span></div>
+          <div class="side-row"><span class="sl">Reporter</span><span class="sv">casey.park</span></div>
+          <div class="side-row"><span class="sl">Priority</span><span class="sv">Medium</span></div>
+          <div class="side-row"><span class="sl">Sprint</span><span class="sv">Sprint 24 Jul</span></div>
+          <div class="side-row"><span class="sl">Approver</span><span class="sv you">you</span></div>
+          <div class="side-row"><span class="sl">Updated</span><span class="sv">2 hours ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- ============ SHOT 3 · desktop citizen: panel canh widget Apple ============ -->
+<div class="shot desktop-mock" id="s3">
+  <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="right">Wed 9:41</span></div>
+  <div class="cap" style="left:auto;right:64px;top:310px;max-width:500px">
+    <h2>A true desktop citizen.</h2>
+    <p>Drag it anywhere — it sits with your widgets, under every window, never in the way.</p>
+  </div>
+
+  <div class="awidget w-weather" style="opacity:1;transform:none">
+    <div class="aw-top"><span>Da Nang</span><span class="aw-sun"></span></div>
+    <div class="aw-temp">31°</div>
+    <div class="aw-hilo">33° / 26° · Sunny</div>
+  </div>
+  <div class="awidget w-cal" style="opacity:1;transform:none">
+    <div class="cal-dow">WED</div>
+    <div class="cal-day">24</div>
+    <div class="cal-ev"><i></i><span>09:00 Standup</span></div>
+    <div class="cal-ev g"><i></i><span>14:00 Sprint review</span></div>
+  </div>
+
+  <div class="panel-replica" style="transform:translate(-39.7cqw,0)">
+    <div class="p-scroll">
+      <div class="p-head"><span>Sprint 24 Jul</span><span class="count">9h 42m</span></div>
+      <p class="p-sub"><i>●</i>updated 10:06</p>
+      <div class="p-sec">
+        <h4>Alerts <span class="pill">8</span></h4>
+        <div class="p-row row-1999"><i class="d red"></i><span class="key">NOVA-1999</span><span class="st">Open</span><span class="who">jordan.lee</span><span class="age">17d</span></div>
+        <div class="p-row"><i class="d pink"></i><span class="key">NOVA-2054</span><span class="st">In Test</span><span class="who">sam.rivera</span><span class="age">8d</span></div>
+        <div class="p-row"><i class="d amber"></i><span class="st">Not done, sprint ending soon</span><span class="who">6</span></div>
+      </div>
+      <div class="p-sec p-progress">
+        <h4>Progress <span class="pill p-num">42/48 · 88%</span></h4>
+        <div class="bar"><i class="f1"></i><i class="f2"></i></div>
+        <div class="legend"><span><b>42</b> done</span><span><b>5</b> doing</span><span><b>1</b> to do</span></div>
+      </div>
+      <div class="p-sec">
+        <h4>Allocation <span class="pill">48</span></h4>
+        <div class="p-alloc">
+          <div class="donut"></div>
+          <div class="leg">
+            <span><i style="background:#ffd166"></i>alex.kim <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#4cd964"></i>jordan.lee <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#e0568f"></i>casey.park <span class="pct p-num">9 · 19%</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="p-sec">
+        <h4>By member <span class="pill p-num">42/48</span></h4>
+        <div class="p-mem">
+          <div class="m"><div class="l1"><b>alex.kim</b><span class="ok p-num">10/10 ✓</span></div><div class="mb"><i style="width:100%"></i></div></div>
+          <div class="m"><div class="l1"><b>jordan.lee</b><span class="p-num">6/9 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+          <div class="m"><div class="l1"><b>casey.park</b><span class="p-num">5/6 · 83%</span></div><div class="mb"><i style="width:83%"></i></div></div>
+          <div class="m"><div class="l1"><b>sam.rivera</b><span class="p-num">4/6 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+        </div>
+      </div>
+      <div class="p-sec p-approve">
+        <h4>Needs my approval <span class="pill">1</span></h4>
+        <div class="p-row row-214"><i class="d blue"></i><span class="key">NOVA-214</span><span class="st">Ready for Review</span><span class="who">alex.kim</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- ============ SHOT 4 · notifications ============ -->
+<div class="shot desktop-mock" id="s4">
+  <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="right">Wed 9:41</span></div>
+  <div class="cap">
+    <h2>Nudged only when something actually changes.</h2>
+    <p>Status moves, reassignments, scope changes — grouped into one native notification, not ten pings.</p>
+    <span class="price">$1.99 one-time · no subscription</span>
+  </div>
+
+  <div class="panel-replica">
+    <div class="p-scroll">
+      <div class="p-head"><span>Sprint 24 Jul</span><span class="count">9h 42m</span></div>
+      <p class="p-sub"><i>●</i>updated 10:06</p>
+      <div class="p-sec">
+        <h4>Alerts <span class="pill">8</span></h4>
+        <div class="p-row row-1999"><i class="d red"></i><span class="key">NOVA-1999</span><span class="st">Open</span><span class="who">jordan.lee</span><span class="age">17d</span></div>
+        <div class="p-row"><i class="d pink"></i><span class="key">NOVA-2054</span><span class="st">In Test</span><span class="who">sam.rivera</span><span class="age">8d</span></div>
+        <div class="p-row"><i class="d amber"></i><span class="st">Not done, sprint ending soon</span><span class="who">6</span></div>
+      </div>
+      <div class="p-sec p-progress">
+        <h4>Progress <span class="pill p-num">42/48 · 88%</span></h4>
+        <div class="bar"><i class="f1"></i><i class="f2"></i></div>
+        <div class="legend"><span><b>42</b> done</span><span><b>5</b> doing</span><span><b>1</b> to do</span></div>
+      </div>
+      <div class="p-sec">
+        <h4>Allocation <span class="pill">48</span></h4>
+        <div class="p-alloc">
+          <div class="donut"></div>
+          <div class="leg">
+            <span><i style="background:#ffd166"></i>alex.kim <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#4cd964"></i>jordan.lee <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#e0568f"></i>casey.park <span class="pct p-num">9 · 19%</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="p-sec">
+        <h4>By member <span class="pill p-num">42/48</span></h4>
+        <div class="p-mem">
+          <div class="m"><div class="l1"><b>alex.kim</b><span class="ok p-num">10/10 ✓</span></div><div class="mb"><i style="width:100%"></i></div></div>
+          <div class="m"><div class="l1"><b>jordan.lee</b><span class="p-num">6/9 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+          <div class="m"><div class="l1"><b>casey.park</b><span class="p-num">5/6 · 83%</span></div><div class="mb"><i style="width:83%"></i></div></div>
+          <div class="m"><div class="l1"><b>sam.rivera</b><span class="p-num">4/6 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" style="opacity:1;transform:none">
+    <img src="/site/assets/icon-64.png" alt="" width="30" height="30">
+    <div class="toast-text"><b>Widget for Jira</b><span><code>NOVA-214</code> Review → Done · alex.kim</span></div>
+  </div>
+  <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- ============ SHOT 5 · from signal to shipped: widgets + Claude Code ============ -->
+<div class="shot desktop-mock" id="s5">
+  <div class="menubar"><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Window</span><span>Help</span><span class="right">Wed 9:41</span></div>
+  <div class="cap" style="max-width:520px">
+    <h2>From signal to shipped.</h2>
+    <p>Spot it on the panel, open it in Jira, fix it in your tools — the panel stays read-only.</p>
+  </div>
+
+  <div class="panel-replica">
+    <div class="p-scroll">
+      <div class="p-head"><span>Sprint 24 Jul</span><span class="count">9h 42m</span></div>
+      <p class="p-sub"><i>●</i>updated 10:06</p>
+      <div class="p-sec">
+        <h4>Alerts <span class="pill">8</span></h4>
+        <div class="p-row row-1999" style="background:rgba(85,152,231,0.22)"><i class="d red"></i><span class="key">NOVA-1999</span><span class="st">Open</span><span class="who">jordan.lee</span><span class="age">17d</span></div>
+        <div class="p-row"><i class="d pink"></i><span class="key">NOVA-2054</span><span class="st">In Test</span><span class="who">sam.rivera</span><span class="age">8d</span></div>
+        <div class="p-row"><i class="d amber"></i><span class="st">Not done, sprint ending soon</span><span class="who">6</span></div>
+      </div>
+      <div class="p-sec p-progress">
+        <h4>Progress <span class="pill p-num">42/48 · 88%</span></h4>
+        <div class="bar"><i class="f1"></i><i class="f2"></i></div>
+        <div class="legend"><span><b>42</b> done</span><span><b>5</b> doing</span><span><b>1</b> to do</span></div>
+      </div>
+      <div class="p-sec">
+        <h4>Allocation <span class="pill">48</span></h4>
+        <div class="p-alloc">
+          <div class="donut"></div>
+          <div class="leg">
+            <span><i style="background:#ffd166"></i>alex.kim <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#4cd964"></i>jordan.lee <span class="pct p-num">10 · 21%</span></span>
+            <span><i style="background:#e0568f"></i>casey.park <span class="pct p-num">9 · 19%</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="p-sec">
+        <h4>By member <span class="pill p-num">42/48</span></h4>
+        <div class="p-mem">
+          <div class="m"><div class="l1"><b>alex.kim</b><span class="ok p-num">10/10 ✓</span></div><div class="mb"><i style="width:100%"></i></div></div>
+          <div class="m"><div class="l1"><b>jordan.lee</b><span class="p-num">6/9 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+          <div class="m"><div class="l1"><b>casey.park</b><span class="p-num">5/6 · 83%</span></div><div class="mb"><i style="width:83%"></i></div></div>
+          <div class="m"><div class="l1"><b>sam.rivera</b><span class="p-num">4/6 · 67%</span></div><div class="mb"><i style="width:67%"></i></div></div>
+        </div>
+      </div>
+      <div class="p-sec p-approve">
+        <h4>Needs my approval <span class="pill">1</span></h4>
+        <div class="p-row row-214"><i class="d blue"></i><span class="key">NOVA-214</span><span class="st">Ready for Review</span><span class="who">alex.kim</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="term" style="opacity:1;transform:scale(1);left:4.5%;top:34%;height:58%">
+    <div class="term-bar"><span class="dot-w r"></span><span class="dot-w y"></span><span class="dot-w g"></span><span class="term-title">claude — nova-app</span></div>
+    <div class="term-body">
+      <div class="t-line t-dim">$ claude</div>
+      <div class="t-line"><span class="t-star">✻</span> Claude Code · nova-app</div>
+      <div class="t-line"><span class="t-prompt">&gt;</span> <span class="t-cmd" style="width:35ch">fix NOVA-1999: add retry backoff ×3</span></div>
+      <div class="t-line t-r1" style="opacity:1"><span class="t-star">●</span> Reading src/payments/retry.ts…</div>
+      <div class="t-line t-r2" style="opacity:1"><span class="t-star">●</span> Edit retry.ts — exponential backoff ×3</div>
+      <div class="t-line t-r3" style="opacity:1"><span class="t-good">✓</span> 128 tests passed · ready to commit</div>
+    </div>
+  </div>
+  <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+</body>
+</html>

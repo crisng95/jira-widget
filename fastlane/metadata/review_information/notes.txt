@@ -7,8 +7,12 @@ HOW TO TEST
 3. The menu-bar icon has Show/Hide, Collapse/Expand, Only-my-work, Refresh, Move panel, Settings, Start with macOS, and Quit.
 
 DEMO ACCESS
-[FILL IN — easiest: a free Jira Cloud demo site, e.g. https://<demo>.atlassian.net, with a demo user email + API token; reachable from any network.]
-[OR if demo mode ships in this build: choose "Use sample data" in the onboarding window — no server or account needed.]
+The demo credentials below are for a real Jira Cloud site on the public internet — no VPN needed.
+1. On first launch the onboarding wizard opens. Choose the "Jira Cloud (email + API token)" sign-in method.
+2. Jira URL: https://isemi.atlassian.net
+3. Email = the demo account user below · API token = the demo account password below.
+4. Test the connection, click "Find board", select "IGS board", and save.
+Note: the demo board's sprint intentionally contains historical data (its end date is in the past), so the panel will show an "overdue" countdown and stale-ticket alerts — these are features being demonstrated, not errors.
 
 NOTES
 • All network traffic goes exclusively to the Jira host the user configures. No developer server, no analytics, no data collection of any kind. The Personal Access Token is stored in the macOS Keychain.

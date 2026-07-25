@@ -1,1 +1,1 @@
-https://github.com/crisng95/jira-widget/issues
+https://widjira.isemi.io/

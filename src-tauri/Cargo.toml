@@ -10,9 +10,10 @@ rust-version = "1.77"
 tauri-build = { version = "2.6", features = [] }
 
 [dependencies]
-# macos-private-api: bat buoc de dung transparent window + vibrancy tren macOS
-# image-png: decode icon template cho tray (icons/tray.png)
-tauri = { version = "2.11", features = ["tray-icon", "macos-private-api", "image-png"] }
+# Transparent window can private API — nam trong feature `panel-transparency`
+# (default). Ban Mac App Store build --no-default-features cho binary sach
+# private API (Guideline 2.5.1). image-png: decode icon template cho tray.
+tauri = { version = "2.11", features = ["tray-icon", "image-png"] }
 tauri-plugin-opener = "2.5"
 tauri-plugin-notification = "2.3"
 tauri-plugin-autostart = "2.5"
@@ -39,8 +40,13 @@ env_logger = "0.11"
 # 0.6.4) de khong keo hai ban objc2 vao cung mot cay phu thuoc.
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
+# Keychain qua Security.framework — hop App Sandbox (CLI `security` bi cam trong sandbox)
+security-framework = "3"
 
 [features]
+default = ["panel-transparency"]
+# Transparent window (private API). Ban MAS: --no-default-features
+panel-transparency = ["tauri/macos-private-api"]
 # duoc tauri CLI dung khi build production
 custom-protocol = ["tauri/custom-protocol"]
 

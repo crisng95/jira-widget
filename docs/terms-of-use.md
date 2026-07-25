@@ -59,8 +59,7 @@ truth, and we are not liable for decisions made based on data the App displays.
 
 ## 8. Support
 
-Best-effort support via aabooksapp@gmail.com or
-https://github.com/crisng95/jira-widget/issues. No service-level agreement is
+Best-effort support via aabooksapp@gmail.com. No service-level agreement is
 promised.
 
 ## 9. Changes to these terms

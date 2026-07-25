@@ -363,21 +363,8 @@ pub fn save(cfg: &Config) -> Result<()> {
 // ---------------------------------------------------------------- Keychain
 
 pub fn keychain_get_account(account: &str) -> Option<String> {
-    let out = Command::new("security")
-        .args([
-            "find-generic-password",
-            "-s",
-            KEYCHAIN_SERVICE,
-            "-a",
-            account,
-            "-w",
-        ])
-        .output()
-        .ok()?;
-    if !out.status.success() {
-        return None;
-    }
-    let token = String::from_utf8(out.stdout).ok()?.trim().to_string();
+    let bytes = security_framework::passwords::get_generic_password(KEYCHAIN_SERVICE, account).ok()?;
+    let token = String::from_utf8(bytes).ok()?.trim().to_string();
     if token.is_empty() {
         None
     } else {
@@ -390,22 +377,8 @@ pub fn keychain_get() -> Option<String> {
 }
 
 pub fn keychain_set_account(account: &str, token: &str) -> Result<()> {
-    let status = Command::new("security")
-        .args([
-            "add-generic-password",
-            "-s",
-            KEYCHAIN_SERVICE,
-            "-a",
-            account,
-            "-w",
-            token,
-            "-U",
-        ])
-        .status()
-        .context("khong chay duoc `security` CLI")?;
-    if !status.success() {
-        return Err(anyhow!("security add-generic-password that bai"));
-    }
+    security_framework::passwords::set_generic_password(KEYCHAIN_SERVICE, account, token.as_bytes())
+        .context("khong ghi duoc vao Keychain (Security.framework)")?;
     Ok(())
 }
 
@@ -415,16 +388,8 @@ pub fn keychain_set(token: &str) -> Result<()> {
 
 /// Xoa mot muc khoi Keychain. Muc khong ton tai KHONG phai loi.
 pub fn keychain_delete_account(account: &str) -> Result<()> {
-    Command::new("security")
-        .args([
-            "delete-generic-password",
-            "-s",
-            KEYCHAIN_SERVICE,
-            "-a",
-            account,
-        ])
-        .output()
-        .context("khong chay duoc `security` CLI")?;
+    // ItemNotFound khong phai loi — muc tieu la "khong con trong Keychain".
+    let _ = security_framework::passwords::delete_generic_password(KEYCHAIN_SERVICE, account);
     Ok(())
 }
 
@@ -481,17 +446,9 @@ pub fn set_token_from_stdin() -> Result<()> {
 
 /// Xoa token khoi Keychain — dung khi muon go han token bot cu ra khoi may.
 pub fn clear_token() -> Result<()> {
-    let out = Command::new("security")
-        .args([
-            "delete-generic-password",
-            "-s",
-            KEYCHAIN_SERVICE,
-            "-a",
-            KEYCHAIN_ACCOUNT,
-        ])
-        .output()
-        .context("khong chay duoc `security` CLI")?;
-    if out.status.success() {
+    let co = keychain_get().is_some();
+    keychain_delete_account(KEYCHAIN_ACCOUNT)?;
+    if co {
         println!("Da xoa token khoi Keychain.");
     } else {
         println!("Khong co token nao trong Keychain de xoa.");

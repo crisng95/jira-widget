@@ -430,13 +430,18 @@ fn build_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
     let sep2 = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", tl("quit"), true, None::<&str>)?;
-    let menu = Menu::with_items(
-        app,
-        &[
-            &show, &compact, &onlyme, &refresh, &move_item, &board, &sep, &prefs, &autostart,
-            &sep2, &quit,
-        ],
-    )?;
+    // Trong App Sandbox (ban Mac App Store) LaunchAgent bi cam ghi — an han
+    // item autostart thay vi de mot cong tac bam vao khong lam gi.
+    let sandboxed = std::env::var_os("APP_SANDBOX_CONTAINER_ID").is_some();
+    let mut items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![
+        &show, &compact, &onlyme, &refresh, &move_item, &board, &sep, &prefs,
+    ];
+    if !sandboxed {
+        items.push(&autostart);
+    }
+    items.push(&sep2);
+    items.push(&quit);
+    let menu = Menu::with_items(app, &items)?;
 
     // Giu tham chieu de tich lai o dung trang thai that sau khi bat/tat
     let autostart_item = autostart.clone();

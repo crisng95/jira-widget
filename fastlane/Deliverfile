@@ -3,9 +3,9 @@
 platform "osx"
 app_identifier "com.isemi.jiraw"
 
-# Chỉ đẩy metadata — binary và screenshots upload riêng khi sẵn sàng
+# Đẩy metadata + screenshots (fastlane/screenshots/{en-US,vi}) — binary upload riêng
 skip_binary_upload true
-skip_screenshots true
+skip_screenshots false
 
 # Không chạy precheck tự động (nội dung đã rà tay; precheck hay báo giả với tên có trademark)
 run_precheck_before_submit false

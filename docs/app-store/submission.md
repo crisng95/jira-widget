@@ -135,7 +135,7 @@ scrum,agile,standup,kanban,board,team,dashboard,tracker,burndown,menubar,backlog
 
 | Field | Giá trị |
 |---|---|
-| Support URL | `https://github.com/crisng95/jira-widget/issues` |
+| Support URL | `https://widjira.isemi.io/` (footer có mailto hỗ trợ; đã bỏ link GitHub issues) |
 | Marketing URL (optional) | `https://widjira.isemi.io/` (bản VI: `https://widjira.isemi.io/vi/`) |
 | Copyright | `2026 ISEMI COMPANY LIMITED` |
 
@@ -203,26 +203,26 @@ Jira là nhãn hiệu đã đăng ký của Atlassian Pty Ltd. Đây là sản p
 
 ## 6. Screenshots (bắt buộc ≥1, tối đa 10)
 
-**Kích thước Mac hợp lệ (16:10):** 1280×800 · 1440×900 · 2560×1600 · **2880×1800** (khuyên dùng).
-PNG hoặc JPEG, không alpha. `docs/panel.png` hiện tại (406×976) **không dùng được**.
+✅ **ĐÃ CÓ — 5 ảnh 2880×1800 (16:10) tại `fastlane/screenshots/en-US/`** (bản vi copy
+cùng bộ), render từ mock desktop `docs/app-store/screenshots-src/shots.html` (tái dùng
+scene CSS của landing, data hư cấu NOVA — không lộ tên thật):
 
-Cách chụp chuẩn 2880×1800 trên màn Retina 2x — chụp vùng 1440×900 point:
+1. `01-hero` — panel + browser mở ticket NOVA-1999, caption "Your active sprint, always in sight."
+2. `02-approve` — panel scroll tới hàng chờ duyệt + trang Approve trên Jira web
+3. `03-widgets` — panel xếp cạnh widget Weather/Calendar của Apple
+4. `04-notify` — notification native + pill giá $1.99
+5. `05-claude-code` — panel + terminal Claude Code fix đúng NOVA-1999
+
+Regenerate (sau khi sửa `shots.html`):
 
 ```bash
-screencapture -R "0,25,1440,900" -x ~/Desktop/jiraw-1.png
-sips -g pixelWidth -g pixelHeight ~/Desktop/jiraw-1.png   # phải ra 2880×1800
+python3 -m http.server 8901 &   # từ repo root
+OUT_DIR="$PWD/fastlane/screenshots/en-US" node <scratchpad>/shots/shots.mjs
+cp fastlane/screenshots/en-US/*.png fastlane/screenshots/vi/
 ```
 
-Bộ 5 ảnh đề xuất (dọn desktop, wallpaper gọn, dữ liệu demo không lộ tên người thật/URL nội bộ):
-
-1. Panel chế độ team đầy đủ trên desktop — hero shot
-2. Cận cảnh khối cảnh báo rủi ro + ba hàng đợi bàn giao
-3. Chế độ "Chỉ việc của tôi" (có chip `● Tên · chỉ việc của tôi`)
-4. Cửa sổ Cài đặt — ô kiểm tra kết nối + board picker
-5. Menu tray đang mở + một notification thật ở góc màn hình
-
-UI đã có i18n vi/en theo ngôn ngữ hệ điều hành — chụp bộ EN cho locale en-US, bộ VI cho
-locale vi (ASC cho phép screenshots khác nhau theo từng locale).
+(Script playwright dùng system Chrome, viewport 1440×900 @2x. Deliverfile đã bật
+`skip_screenshots false` — push metadata sẽ upload luôn bộ ảnh.)
 
 ---
 
@@ -291,7 +291,7 @@ Store là một cấu hình build **khác**, còn các việc sau:
 | 8 | Kiến trúc | Hiện arm64-only — MAS chấp nhận (máy Intel không cài được). Muốn phủ Intel: build `--target universal-apple-darwin`. |
 | 9 | Version | Khuyên nâng `version` trong `tauri.conf.json` → **`1.0.0`** cho bản đầu lên store (ASC đối chiếu CFBundleShortVersionString). |
 | 10 | Demo cho App Review | ⚠️ đã có lối dễ: Jira Cloud site miễn phí làm demo (mục 7); demo mode thành phương án dự phòng. |
-| 11 | minimumSystemVersion | Đang `11.0` — nếu chuyển autostart sang SMAppService thì nâng lên `13.0`, đồng thời ASC hiện đúng yêu cầu hệ điều hành. |
+| 11 | minimumSystemVersion | Bản MAS: **12.0** (`tauri.mas.conf.json` + `MACOSX_DEPLOYMENT_TARGET=12.0`) — bắt buộc cho arm64-only (Apple 90869). Bản .dmg ngoài store giữ 11.0. |
 
 ### Lối ít công hơn nếu mục tiêu chỉ là "teammate cài không bị chặn"
 
@@ -306,26 +306,19 @@ sau.
 ## 9. Thứ tự thao tác đề xuất
 
 1. ~~Chốt tên app~~ → đã chốt **Widget for Jira**, repo + metadata đổi xong.
-2. **Homepage lên sóng** (bắt buộc trước khi push metadata — privacy URL trỏ về đây):
-   a. DNS của `isemi.io`: thêm bản ghi **CNAME `widjira` → `crisng95.github.io`**.
-   b. Push repo lên GitHub (`site/` + `.github/workflows/pages.yml` có sẵn).
-   c. Repo → Settings → Pages → Source: **GitHub Actions**; Custom domain:
-      `widjira.isemi.io` → chờ DNS check xanh → bật **Enforce HTTPS**. (Khuyên:
-      verify domain `isemi.io` trong Settings → Pages để chống subdomain takeover.)
-   d. `curl -sI https://widjira.isemi.io/ https://widjira.isemi.io/privacy/ | grep HTTP`
-      phải ra `200` rồi mới push metadata.
-3. Đẩy metadata lên ASC (điền mục 1, 4, 5, privacy URL + review notes tự động):
-
-   ```bash
-   ASC_ISSUER_ID=<issuer-uuid> fastlane mac push_metadata
-   ```
-
-   Issuer ID lấy ở **ASC → Users and Access → Integrations → App Store Connect API**.
-   Key mặc định: `~/.appstoreconnect/private_keys/AuthKey_883W4Z3Z99.p8`; dùng key khác
-   thì thêm `ASC_KEY_ID=... ASC_KEY_PATH=...`.
+2. ~~Homepage lên sóng~~ → ✅ **live tại https://widjira.isemi.io** (tự host qua
+   Cloudflare Tunnel — commit `84a0d93`; deploy bản mới bằng `scripts/deploy-site.sh`,
+   KHÔNG phải git push). Đã verify 200 cho `/`, `/vi/`, `/privacy/`, `/terms/`.
+3. ~~Đẩy metadata + screenshots lên ASC~~ → ✅ **XONG 25/07** (verify chéo qua API:
+   name/subtitle/desc/keywords/promo/URLs cả 2 locale + copyright + categories + 10 ảnh).
+   Issuer ID lấy runtime bằng `asc auth issuer-id` (profile "Spikdi", key 883W4Z3Z99).
+   Chạy lại khi sửa nội dung: `ASC_ISSUER_ID=$(asc auth issuer-id) fastlane mac push_metadata`.
+   ⚠️ **Review information đang PARKED** tại `fastlane/review_information.pending/` —
+   ASC bắt buộc `contactPhone` định dạng `+84…`. Khi có số: tạo `phone_number.txt`,
+   move thư mục về `fastlane/metadata/review_information/`, chạy lại lệnh trên.
 4. Trên ASC UI còn 4 thứ deliver không đụng được: **Pricing** (set $1.99), bảng câu hỏi
    **App Privacy** (chọn Data Not Collected), **Age rating** (None hết → 4+), và
    **số điện thoại** trong App Review Information.
 5. Làm 4 việc code blocker (#3–#6 mục 8) + demo mode (#10) → build MAS → upload .pkg.
-6. Chụp screenshots từ bản chạy thật (mục 6), upload.
+6. ~~Screenshots~~ → ✅ đã render 5 ảnh 2880×1800 (mục 6), deliver sẽ tự upload.
 7. Điền demo access vào Review Notes + video (mục 7) → **Submit for Review**.

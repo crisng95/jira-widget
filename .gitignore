@@ -25,3 +25,7 @@ src-tauri/icons/Square*.png
 src-tauri/icons/StoreLogo.png
 src-tauri/icons/icon.ico
 src-tauri/icons/64x64.png
+
+# thong tin lien he ca nhan — chi can tren dia cho deliver, khong len repo public
+fastlane/metadata/review_information/phone_number.txt
+fastlane/report.xml
