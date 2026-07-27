@@ -1,6 +1,6 @@
 [package]
 name = "jira-widget"
-version = "0.1.1"
+version = "1.0.1"
 description = "Desktop panel theo doi active sprint cua board All items"
 authors = ["crisng95"]
 edition = "2021"
@@ -13,7 +13,7 @@ tauri-build = { version = "2.6", features = [] }
 # Transparent window can private API — nam trong feature `panel-transparency`
 # (default). Ban Mac App Store build --no-default-features cho binary sach
 # private API (Guideline 2.5.1). image-png: decode icon template cho tray.
-tauri = { version = "2.11", features = ["tray-icon", "image-png"] }
+tauri = { version = "2.11", features = ["macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-opener = "2.5"
 tauri-plugin-notification = "2.3"
 tauri-plugin-autostart = "2.5"
