@@ -43,12 +43,12 @@ mod desktop_layer {
     use objc2::runtime::AnyObject;
 
     // Hoi CoreGraphics con so that thay vi hardcode magic number:
-    // level cua desktop icon hien la -2147483603, nhung day la chi tiet cai dat.
+    // kCGDesktopWindowLevelKey (key 2) = -2147483623 (tang phong nen desktop).
     #[link(name = "CoreGraphics", kind = "framework")]
     extern "C" {
         fn CGWindowLevelForKey(key: i32) -> i32;
     }
-    const KEY_DESKTOP_ICON: i32 = 18; // kCGDesktopIconWindowLevelKey
+    const KEY_DESKTOP_WINDOW: i32 = 2; // kCGDesktopWindowLevelKey
 
     // NSWindowCollectionBehavior
     const CAN_JOIN_ALL_SPACES: isize = 1 << 0; // hien o moi Space
@@ -61,14 +61,18 @@ mod desktop_layer {
             log::warn!("khong lay duoc NSWindow — bo qua viec ghim xuong desktop");
             return 0;
         }
-        // +1 de nam ngay TREN icon desktop (panel de doc, khong nen bi icon che),
-        // nhung van thap hon cua so app thuong (level 0) rat nhieu.
-        let level = unsafe { CGWindowLevelForKey(KEY_DESKTOP_ICON) } as isize + 1;
+        // Dung KEY_DESKTOP_WINDOW (key 2 = -2147483623) + 1 = -2147483622:
+        // Nam o tang phong nen desktop (cung tang voi widget goc macOS Sonoma).
+        // Khi slide giua cac Space, WindowServer cuon panel va phong nen phia DUOI
+        // tat ca cua so app, khong bao gio bi noi len foreground trong 0.5s transition.
+        let level = unsafe { CGWindowLevelForKey(KEY_DESKTOP_WINDOW) } as isize + 1;
         let behavior = CAN_JOIN_ALL_SPACES | STATIONARY | IGNORES_CYCLE | IGNORES_VISIBILITY;
         let obj = ns_window as *mut AnyObject;
         unsafe {
             let _: () = msg_send![obj, setLevel: level];
             let _: () = msg_send![obj, setCollectionBehavior: behavior];
+            let _: () = msg_send![obj, setHidesOnDeactivate: false];
+            let _: () = msg_send![obj, orderBack: std::ptr::null::<AnyObject>()];
         }
         level as i64
     }

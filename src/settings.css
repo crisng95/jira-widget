@@ -81,6 +81,11 @@
 .sw-foot .spacer {
   flex: 1;
 }
+.sw-foot .ver {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
 
 /* --- Hop cau hinh mot hang doi: switch o header, danh sach status ben trong --- */
 .qbox {

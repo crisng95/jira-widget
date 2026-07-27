@@ -10,6 +10,7 @@
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
+  import { getVersion } from "@tauri-apps/api/app";
   import { t, setLang } from "./i18n.svelte";
 
   type Notify = {
@@ -73,10 +74,13 @@
   let releaseText = $state("");
   // Danh sach status THAT cua project. Rong => chua tai duoc, rot ve go tay.
   let allStatuses = $state<string[]>([]);
+  let appVersion = $state("1.0.1");
 
   // onMount PHAI dong bo: callback async tra ve Promise, Svelte khong coi do
   // la ham don dep nen listener se khong bao gio duoc go.
   onMount(() => {
+    getVersion().then((v) => (appVersion = v)).catch(() => {});
+
     // Mode đổi được từ menu bar hoặc chip trên panel trong lúc cửa sổ này đang
     // mở. Không nghe thì seg hiện một đằng, panel chạy một nẻo — rồi bấm Lưu
     // là ghi đè ngược lại cái vừa chọn.
@@ -683,6 +687,7 @@
     </button>
     <button onclick={() => save(false)} disabled={busy !== ""}>{t("saveOnly")}</button>
     <span class="spacer"></span>
+    <span class="ver">v{appVersion}</span>
     <button class="ghost" onclick={() => invoke("settings_close")}>{t("close")}</button>
   </div>
 </div>
