@@ -54,6 +54,7 @@ mod desktop_layer {
     const CAN_JOIN_ALL_SPACES: isize = 1 << 0; // hien o moi Space
     const STATIONARY: isize = 1 << 4; // dung yen khi vao Mission Control
     const IGNORES_CYCLE: isize = 1 << 6; // khong nhay vao vong Cmd+`
+    const IGNORES_VISIBILITY: isize = 1 << 15; // khong noi len overlay foreground khi slide qua Desktop/Space khac
 
     pub fn pin(ns_window: *mut std::ffi::c_void) -> i64 {
         if ns_window.is_null() {
@@ -63,7 +64,7 @@ mod desktop_layer {
         // +1 de nam ngay TREN icon desktop (panel de doc, khong nen bi icon che),
         // nhung van thap hon cua so app thuong (level 0) rat nhieu.
         let level = unsafe { CGWindowLevelForKey(KEY_DESKTOP_ICON) } as isize + 1;
-        let behavior = CAN_JOIN_ALL_SPACES | STATIONARY | IGNORES_CYCLE;
+        let behavior = CAN_JOIN_ALL_SPACES | STATIONARY | IGNORES_CYCLE | IGNORES_VISIBILITY;
         let obj = ns_window as *mut AnyObject;
         unsafe {
             let _: () = msg_send![obj, setLevel: level];
