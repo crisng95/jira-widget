@@ -51,6 +51,10 @@
   --pill-hot-fg: #a02c2c;
   --you-bg: rgba(42, 120, 214, 0.14);
   --you-fg: #1f5fb0;
+  /* chip "dang lam" — pha tu --status-warning, chu phai tham hon nen amber
+     moi du tuong phan tren nen sang */
+  --wip-bg: rgba(250, 178, 25, 0.18);
+  --wip-fg: #8a5900;
 
   /* --- thang spacing: goc 4px, dung gap chu khong margin roi --- */
   --sp-xs: 2px;
@@ -109,6 +113,8 @@
     --pill-hot-fg: #ffc9c7;
     --you-bg: rgba(57, 135, 229, 0.26);
     --you-fg: #cfe2fb;
+    --wip-bg: rgba(250, 178, 25, 0.22);
+    --wip-fg: #ffd48a;
   }
 }
 
@@ -140,6 +146,8 @@
   --pill-hot-fg: #ffc9c7;
   --you-bg: rgba(57, 135, 229, 0.26);
   --you-fg: #cfe2fb;
+  --wip-bg: rgba(250, 178, 25, 0.22);
+  --wip-fg: #ffd48a;
 }
 
 * {

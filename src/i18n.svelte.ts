@@ -92,6 +92,9 @@ const vi: Record<string, string> = {
   noTicketsSprint: "Sprint chưa có ticket nào.",
   left: "còn {n}",
   allDoneTick: "xong hết",
+  wipTag: "đang làm {n} ticket",
+  barBreak: "{d} xong · {w} đang làm · {o} chưa làm",
+  nobodyWip: "Chưa ai bắt đầu ticket nào.",
 
   // --- hang doi ---
   qTestMine: "Cần tôi test",
@@ -336,6 +339,9 @@ const en: Record<string, string> = {
 
   byMember: "Progress by member",
   noTicketsSprint: "No tickets in this sprint yet.",
+  wipTag: "{n} ticket(s) in progress",
+  barBreak: "{d} done · {w} in progress · {o} to do",
+  nobodyWip: "Nobody has started a ticket yet.",
   left: "{n} left",
   allDoneTick: "all done",
 

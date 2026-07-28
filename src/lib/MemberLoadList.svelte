@@ -8,11 +8,34 @@
     colors,
   }: { members: MemberLoad[]; colors: Map<string, string> } = $props();
 
-  // Mau dinh danh nam o chip initials; thanh ben duoi la THANH TIEN DO
-  // done/total, khong phai thanh khoi luong. Phan done to xanh --status-good
-  // (status thuc su: xong = tot), phan con lai de tro track.
+  // Mau dinh danh nam o chip initials; thanh ben duoi la THANH TIEN DO cua
+  // rieng nguoi do, xep lop theo status category: xong = xanh --status-good,
+  // dang lam = vang --status-warning, chua lam = xam track. Ba category cua
+  // Jira (done / indeterminate / new) roi nhau va phu kin, nen
+  // done + inProgress + todo == total — khong can doan phan du.
+  //
+  // Dung flex-grow thay vi width:% de khong bao gio tran: ba con so lam tron
+  // rieng le co the cong lai thanh 101%.
   let totalAll = $derived(members.reduce((s, m) => s + m.total, 0));
   let doneAll = $derived(members.reduce((s, m) => s + m.done, 0));
+  let wipAll = $derived(members.reduce((s, m) => s + m.inProgress, 0));
+  let todoAll = $derived(members.reduce((s, m) => s + m.todo, 0));
+
+  let legend = $derived(
+    [
+      { key: "done", label: t("stDone"), n: doneAll, color: "var(--status-good)" },
+      { key: "wip", label: t("stWip"), n: wipAll, color: "var(--status-warning)" },
+      { key: "todo", label: t("stTodo"), n: todoAll, color: "var(--baseline)" },
+    ].filter((s) => s.n > 0),
+  );
+
+  function segs(m: MemberLoad) {
+    return [
+      { key: "done", n: m.done, color: "var(--status-good)", label: t("stDone") },
+      { key: "wip", n: m.inProgress, color: "var(--status-warning)", label: t("stWip") },
+      { key: "todo", n: m.todo, color: "var(--baseline)", label: t("stTodo") },
+    ].filter((s) => s.n > 0);
+  }
 
   function subLine(m: MemberLoad): string {
     const parts = m.byStatus
@@ -31,6 +54,24 @@
   {#if members.length === 0}
     <p class="empty">{t("noTicketsSprint")}</p>
   {:else}
+    <!-- Chu giai kem tong cua ca danh sach: doc mot dong la biet ba mau nghia
+         gi VA team dang dung o dau, khong phai cong nham tu cac thanh. -->
+    <ul class="legend">
+      {#each legend as s (s.key)}
+        <li>
+          <span class="sw" style:background={s.color}></span>
+          <span class="lb">{s.label}</span>
+          <span class="n num">{s.n}</span>
+        </li>
+      {/each}
+    </ul>
+
+    <!-- Vang bien mat co hai nghia rat khac nhau: khong ai lam, hay da xong
+         het. Noi thang ra truong hop dau, dung de nguoi doc tu suy. -->
+    {#if wipAll === 0 && todoAll > 0}
+      <p class="nowip">{t("nobodyWip")}</p>
+    {/if}
+
     <ul>
       {#each members as m (m.name)}
         <li class="mrow">
@@ -46,7 +87,11 @@
             <span class="l1">
               <span class="nm" class:ghost={m.isUnassigned} title={m.isUnassigned ? t("unassigned") : m.display}
                 >{m.isUnassigned ? t("unassigned") : memberLabel(m)}</span
-              >{#if m.isMe}<span class="metag">{t("you")}</span>{/if}
+              >{#if m.isMe}<span class="metag">{t("you")}</span>{/if}{#if m.inProgress > 0}<span
+                  class="wiptag num"
+                  title={t("wipTag", { n: m.inProgress })}
+                  ><i class="wipdot"></i>{m.inProgress}</span
+                >{/if}
               <!-- So luon hien ben canh: thanh khong bao gio la cach duy nhat doc -->
               <span class="fig num">
                 <span class="c"><b>{m.done}</b>/{m.total}</span>
@@ -57,12 +102,21 @@
                   >{/if}
               </span>
             </span>
-            <span class="track" title="{m.done}/{m.total}">
-              <span
-                class="fill"
-                class:ghostfill={m.isUnassigned}
-                style:width="{m.donePercent}%"
-              ></span>
+            <span
+              class="track"
+              class:ghost={m.isUnassigned}
+              role="img"
+              aria-label={t("barBreak", { d: m.done, w: m.inProgress, o: m.todo })}
+              title={t("barBreak", { d: m.done, w: m.inProgress, o: m.todo })}
+            >
+              {#each segs(m) as s (s.key)}
+                <span
+                  class="seg"
+                  style:flex-grow={s.n}
+                  style:background={s.color}
+                  title="{s.label}: {s.n}"
+                ></span>
+              {/each}
             </span>
             {#if m.open > 0}
               <span class="l2 num">{subLine(m)}</span>
@@ -175,21 +229,77 @@
     font-weight: 700;
   }
 
-  .track {
-    display: block;
+  /* Chu giai chung, dat ngay duoi tieu de section */
+  .legend {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 3px var(--sp-lg);
+    margin: -2px 0 8px;
+    font-size: 9.5px;
+  }
+  .legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sw {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    flex: none;
+  }
+  .legend .lb {
+    color: var(--text-muted);
+  }
+  .legend .n {
+    font-weight: 640;
+    color: var(--text-secondary);
+  }
+
+  .nowip {
+    margin: -4px 0 8px;
+    font-size: 9.5px;
+    color: var(--text-muted);
+  }
+
+  /* Chip "dang lam": cham vang + so, doc duoc ngay canh ten nen khong phai
+     do do dai doan vang tren thanh moi biet ai dang chay viec. */
+  .wiptag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: none;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px 1px 4px;
+    border-radius: var(--r-sm);
+    background: var(--wip-bg);
+    color: var(--wip-fg);
+  }
+  .wipdot {
+    width: 4px;
     height: 4px;
+    border-radius: 50%;
+    background: var(--status-warning);
+    flex: none;
+  }
+
+  /* Thanh xep lop: xong | dang lam | chua lam. Khe 1.5px cung mau nen tach
+     cac doan ma khong can ve vien. */
+  .track {
+    display: flex;
+    gap: 1.5px;
+    height: 5px;
     background: var(--raised);
     border-radius: 3px;
     overflow: hidden;
   }
-  .fill {
+  .seg {
     display: block;
-    height: 100%;
-    background: var(--status-good);
-    border-radius: 3px;
+    min-width: 3px;
   }
-  .fill.ghostfill {
-    background: var(--baseline);
+  .track.ghost .seg {
+    opacity: 0.5;
   }
 
   .l2 {
