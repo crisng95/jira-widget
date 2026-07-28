@@ -28,6 +28,10 @@ const EVENT_MOVE_MODE: &str = "panel://move-mode";
 /// Tich "Chi viec cua toi" tren tray. Giu tham chieu de con dong bo khi mode
 /// bi doi tu cho khac (chip tren panel, radio trong Cai dat).
 static MODE_ITEM: OnceLock<CheckMenuItem<tauri::Wry>> = OnceLock::new();
+
+/// Panel dang o che do di chuyen (noi len tren de nhan chuot). Trong luc nay
+/// moi su kien `Moved` deu la anh dang keo, khong duoc ghim panel xuong desktop.
+static DANG_KEO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt as AutostartManagerExt};
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::{mpsc, Mutex};
@@ -50,23 +54,42 @@ mod desktop_layer {
     }
     const KEY_DESKTOP_WINDOW: i32 = 2; // kCGDesktopWindowLevelKey
 
-    // NSWindowCollectionBehavior
+    // NSWindowCollectionBehavior. Chi dung nhung bit CO THAT trong AppKit:
+    // header dinh nghia bit 0..12 roi nhay thang len 16..18, nen mot hang so
+    // kieu `1 << 15` khong phai co "an overlay" nao ca — no la bit vo nghia,
+    // setCollectionBehavior: nuot im va lap trinh vien tuong minh da fix.
     const CAN_JOIN_ALL_SPACES: isize = 1 << 0; // hien o moi Space
     const STATIONARY: isize = 1 << 4; // dung yen khi vao Mission Control
     const IGNORES_CYCLE: isize = 1 << 6; // khong nhay vao vong Cmd+`
-    const IGNORES_VISIBILITY: isize = 1 << 15; // khong noi len overlay foreground khi slide qua Desktop/Space khac
 
+    /// Level dich: ngay TREN tang phong nen desktop (key 2 = -2147483623),
+    /// van con thap hon icon desktop (-2147483603) va moi cua so app (0).
+    pub fn desired_level() -> isize {
+        (unsafe { CGWindowLevelForKey(KEY_DESKTOP_WINDOW) }) as isize + 1
+    }
+
+    /// Doc level THUC TE window dang mang.
+    ///
+    /// Truoc day `pin()` tra ve con so minh MUON dat va log in con so do, nen
+    /// mot lan `setLevel:` bi ghi de van hien ra dong log "ghim thanh cong".
+    /// Moi thu doc len tu day deu phai la so that.
+    pub fn current_level(ns_window: *mut std::ffi::c_void) -> Option<isize> {
+        if ns_window.is_null() {
+            return None;
+        }
+        let obj = ns_window as *mut AnyObject;
+        Some(unsafe { msg_send![obj, level] })
+    }
+
+    /// Ghim window xuong tang desktop. Tra ve level THUC TE sau khi dat —
+    /// khac `desired_level()` nghia la co thu gi do vua ghi de len.
     pub fn pin(ns_window: *mut std::ffi::c_void) -> i64 {
         if ns_window.is_null() {
             log::warn!("khong lay duoc NSWindow — bo qua viec ghim xuong desktop");
             return 0;
         }
-        // Dung KEY_DESKTOP_WINDOW (key 2 = -2147483623) + 1 = -2147483622:
-        // Nam o tang phong nen desktop (cung tang voi widget goc macOS Sonoma).
-        // Khi slide giua cac Space, WindowServer cuon panel va phong nen phia DUOI
-        // tat ca cua so app, khong bao gio bi noi len foreground trong 0.5s transition.
-        let level = unsafe { CGWindowLevelForKey(KEY_DESKTOP_WINDOW) } as isize + 1;
-        let behavior = CAN_JOIN_ALL_SPACES | STATIONARY | IGNORES_CYCLE | IGNORES_VISIBILITY;
+        let level = desired_level();
+        let behavior = CAN_JOIN_ALL_SPACES | STATIONARY | IGNORES_CYCLE;
         let obj = ns_window as *mut AnyObject;
         unsafe {
             let _: () = msg_send![obj, setLevel: level];
@@ -74,7 +97,7 @@ mod desktop_layer {
             let _: () = msg_send![obj, setHidesOnDeactivate: false];
             let _: () = msg_send![obj, orderBack: std::ptr::null::<AnyObject>()];
         }
-        level as i64
+        current_level(ns_window).unwrap_or(0) as i64
     }
 }
 
@@ -300,24 +323,19 @@ fn set_move_mode(
         return Ok(());
     };
     if moving {
+        DANG_KEO.store(true, std::sync::atomic::Ordering::Relaxed);
         let _ = win.set_always_on_top(true);
         let _ = win.show();
         let _ = win.set_focus();
         log::info!("bat che do di chuyen panel");
         return Ok(());
     }
+    DANG_KEO.store(false, std::sync::atomic::Ordering::Relaxed);
     match state.cfg.window_layer {
         WindowLayer::Desktop => {
             let _ = win.set_always_on_top(false);
             #[cfg(target_os = "macos")]
-            {
-                match win.ns_window() {
-                    Ok(ptr) => {
-                        desktop_layer::pin(ptr);
-                    }
-                    Err(e) => log::warn!("khong lay duoc NSWindow khi tra panel ve desktop: {e}"),
-                }
-            }
+            repin_desktop(&win, "xong-di-chuyen");
         }
         WindowLayer::Floating => {
             let _ = win.set_always_on_top(true);
@@ -351,6 +369,35 @@ fn set_autostart(app: tauri::AppHandle, enable: bool) -> Result<(), String> {
 }
 
 // ----------------------------------------------------------------- helpers
+
+/// Ghim lai panel xuong tang desktop va noi ro ket qua THAT tai `moc`.
+///
+/// Ghim mot lan trong `setup()` khong du: dat lai KHUNG cua so (set_position /
+/// set_size) lam AppKit tra level ve 0. Ngay sau setup, plugin window-state
+/// khoi phuc vi tri da luu — the la level vua dat bay mat va panel song ca
+/// phien nhu mot cua so app binh thuong, noi len roi bi cua so khac de xuong.
+#[cfg(target_os = "macos")]
+fn repin_ptr(ptr: *mut std::ffi::c_void, moc: &str) {
+    let want = desktop_layer::desired_level() as i64;
+    let truoc = desktop_layer::current_level(ptr).unwrap_or(0) as i64;
+    if truoc == want {
+        return;
+    }
+    let sau = desktop_layer::pin(ptr);
+    if sau == want {
+        log::info!("[{moc}] ghim lai panel xuong desktop: {truoc} -> {sau}");
+    } else {
+        log::warn!("[{moc}] ghim hut: muon {want}, window van o {sau}");
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn repin_desktop(win: &WebviewWindow, moc: &str) {
+    match win.ns_window() {
+        Ok(ptr) => repin_ptr(ptr, moc),
+        Err(e) => log::warn!("[{moc}] khong lay duoc NSWindow: {e}"),
+    }
+}
 
 fn toggle_window(app: &tauri::AppHandle) {
     let Some(win) = app.get_webview_window("main") else {
@@ -713,6 +760,8 @@ fn main() {
         onboarding: thieu_token,
     });
 
+    let layer = state.cfg.window_layer;
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
@@ -722,6 +771,34 @@ fn main() {
             None,
         ))
         .manage(state.clone())
+        // AppKit tra NSWindow ve level 0 moi khi khung cua so bi dat lai — ca
+        // luc plugin window-state khoi phuc vi tri da luu lan luc code minh goi
+        // set_position. Khong ai ghim lai, nen panel song ca phien nhu mot cua
+        // so app binh thuong: no noi len roi bi cua so khac de xuong. Ghim lai
+        // ngay tai day la cho duy nhat bat duoc MOI lan khung thay doi.
+        .on_window_event(|win, ev| {
+            #[cfg(target_os = "macos")]
+            {
+                use tauri::WindowEvent;
+                if win.label() != "main"
+                    || !matches!(ev, WindowEvent::Moved(_) | WindowEvent::Resized(_))
+                    // Che do di chuyen co y nang panel len tren de keo — dung dim
+                    // no xuong giua chung.
+                    || DANG_KEO.load(std::sync::atomic::Ordering::Relaxed)
+                {
+                    return;
+                }
+                let Some(state) = win.try_state::<Arc<AppState>>() else {
+                    return;
+                };
+                if state.cfg.window_layer != WindowLayer::Desktop {
+                    return;
+                }
+                if let Ok(ptr) = win.ns_window() {
+                    repin_ptr(ptr, "doi-khung");
+                }
+            }
+        })
         .setup(move |app| {
             // Panel song tren menu bar, khong chiem cho o Dock
             #[cfg(target_os = "macos")]
@@ -734,15 +811,7 @@ fn main() {
                         // minh vua dat va panel lai noi len tren.
                         let _ = win.set_always_on_top(false);
                         #[cfg(target_os = "macos")]
-                        {
-                            match win.ns_window() {
-                                Ok(ptr) => {
-                                    let lv = desktop_layer::pin(ptr);
-                                    log::info!("panel ghim vao desktop (NSWindow level {lv})");
-                                }
-                                Err(e) => log::warn!("khong lay duoc NSWindow: {e}"),
-                            }
-                        }
+                        repin_desktop(&win, "setup");
                     }
                     WindowLayer::Floating => {
                         let _ = win.set_visible_on_all_workspaces(true);
@@ -801,6 +870,20 @@ fn main() {
             settings::oauth_whoami,
             settings::oauth_logout
         ])
-        .run(tauri::generate_context!())
-        .expect("khong khoi dong duoc app");
+        .build(tauri::generate_context!())
+        .expect("khong khoi dong duoc app")
+        .run(move |_app, _event| {
+            // Luoi an toan. Do do duoc thi o `Ready` level thuong VAN dung —
+            // thu lam mat no la su kien Moved/Resized den ngay sau, da co
+            // `on_window_event` bat. Giu lai de lan khoi dong nao khong ai doi
+            // khung ma level van roi thi con cho vot.
+            #[cfg(target_os = "macos")]
+            if matches!(_event, tauri::RunEvent::Ready) {
+                if layer == WindowLayer::Desktop {
+                    if let Some(win) = _app.get_webview_window("main") {
+                        repin_desktop(&win, "ready");
+                    }
+                }
+            }
+        });
 }
