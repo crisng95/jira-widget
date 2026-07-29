@@ -399,6 +399,43 @@ fn repin_desktop(win: &WebviewWindow, moc: &str) {
     }
 }
 
+/// Canh cho panel luon nam o tang desktop.
+///
+/// `on_window_event` chi bat duoc nhung lan level roi keo theo Moved/Resized.
+/// Bao cao thuc te cho thay co may van bi panel noi len khi chuyen Desktop du
+/// hai moc kia da chay — nghia la con duong lam roi level ma minh chua biet,
+/// va no phu thuoc may/phien ban macOS nen khong tai hien duoc o day. Thay vi
+/// doan tiep, giu bat bien bang cach kiem tra dinh ky: 2 lan/giay, moi lan chi
+/// la mot message send doc `level`.
+///
+/// `repin_ptr` im lang khi level da dung, nen dong log "[tu-chinh]" xuat hien
+/// la bang chung truc tiep rang tren may do co thu gi khac dang ha level xuong.
+#[cfg(target_os = "macos")]
+fn giu_tang_desktop(app: tauri::AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            // Che do di chuyen co y nang panel len tren — dung dim no xuong.
+            if DANG_KEO.load(std::sync::atomic::Ordering::Relaxed) {
+                continue;
+            }
+            let h = app.clone();
+            if app
+                .run_on_main_thread(move || {
+                    if let Some(w) = h.get_webview_window("main") {
+                        if let Ok(ptr) = w.ns_window() {
+                            repin_ptr(ptr, "tu-chinh");
+                        }
+                    }
+                })
+                .is_err()
+            {
+                return; // app dang tat
+            }
+        }
+    });
+}
+
 fn toggle_window(app: &tauri::AppHandle) {
     let Some(win) = app.get_webview_window("main") else {
         return;
@@ -883,6 +920,7 @@ fn main() {
                     if let Some(win) = _app.get_webview_window("main") {
                         repin_desktop(&win, "ready");
                     }
+                    giu_tang_desktop(_app.clone());
                 }
             }
         });
