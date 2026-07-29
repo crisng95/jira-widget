@@ -46,13 +46,12 @@ mod desktop_layer {
     use objc2::msg_send;
     use objc2::runtime::AnyObject;
 
-    // Hoi CoreGraphics con so that thay vi hardcode magic number:
-    // kCGDesktopWindowLevelKey (key 2) = -2147483623 (tang phong nen desktop).
+    // Hoi CoreGraphics con so that thay vi hardcode magic number.
     #[link(name = "CoreGraphics", kind = "framework")]
     extern "C" {
         fn CGWindowLevelForKey(key: i32) -> i32;
     }
-    const KEY_DESKTOP_WINDOW: i32 = 2; // kCGDesktopWindowLevelKey
+    const KEY_DESKTOP_ICON: i32 = 18; // kCGDesktopIconWindowLevelKey = -2147483603
 
     // NSWindowCollectionBehavior. Chi dung nhung bit CO THAT trong AppKit:
     // header dinh nghia bit 0..12 roi nhay thang len 16..18, nen mot hang so
@@ -62,10 +61,23 @@ mod desktop_layer {
     const STATIONARY: isize = 1 << 4; // dung yen khi vao Mission Control
     const IGNORES_CYCLE: isize = 1 << 6; // khong nhay vao vong Cmd+`
 
-    /// Level dich: ngay TREN tang phong nen desktop (key 2 = -2147483623),
-    /// van con thap hon icon desktop (-2147483603) va moi cua so app (0).
+    /// Level dich: DUNG tang ma widget goc cua macOS dang nam.
+    ///
+    /// Do bang CGWindowList tren may that, cac tang am xep tu duoi len:
+    ///
+    /// ```text
+    /// -2147483624  Dock                 hinh nen
+    /// -2147483603  Finder  1512x982     cua so desktop, PHU KIN man hinh
+    /// -2147483601  Notification Center  widget goc macOS (World Clock...)
+    ///           0  moi cua so app
+    /// ```
+    ///
+    /// Bai hoc dat gia: dat panel duoi -2147483603 thi cua so desktop cua
+    /// Finder nam de len va NUOT SACH chuot — panel thanh mot buc anh chet.
+    /// Phai nam TREN Finder moi bam duoc. Chon dung -2147483601 de panel xep
+    /// va chuyen Space y het widget goc dang dung canh no.
     pub fn desired_level() -> isize {
-        (unsafe { CGWindowLevelForKey(KEY_DESKTOP_WINDOW) }) as isize + 1
+        (unsafe { CGWindowLevelForKey(KEY_DESKTOP_ICON) }) as isize + 2
     }
 
     /// Doc level THUC TE window dang mang.
